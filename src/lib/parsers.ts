@@ -1,0 +1,93 @@
+import { asNullableNumber, asNullableString, asNumber, asString, isOneOf, isRecord } from "@/lib/guards";
+import {
+  contractStatuses,
+  maintenancePriorities,
+  maintenanceStatuses,
+  paymentFrequencies,
+  paymentStatuses,
+  propertyStatuses,
+  propertyTypes,
+  unitStatuses,
+  type ContractOut,
+  type MaintenanceOut,
+  type OwnerOut,
+  type PaymentOut,
+  type PropertyOut,
+  type ServiceOut,
+  type TenantOut,
+  type UnitOut,
+  type VendorOut,
+} from "@/types/resources";
+
+function parseArray<T>(value: unknown, parseItem: (item: unknown) => T | null): T[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(parseItem).filter((item): item is T => item !== null);
+}
+
+export function parsePropertyOut(value: unknown): PropertyOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id);
+  const name = asString(value.name);
+  const unitsCount = asNumber(value.units_count);
+  if (id === null || !name || unitsCount === null || !isOneOf(value.property_type, propertyTypes) || !isOneOf(value.status, propertyStatuses)) return null;
+  return { id, name, property_type: value.property_type, address: asNullableString(value.address) ?? null, city: asNullableString(value.city) ?? null, floors_count: asNullableNumber(value.floors_count) ?? null, owner_id: asNullableNumber(value.owner_id) ?? null, notes: asNullableString(value.notes) ?? null, status: value.status, units_count: unitsCount };
+}
+export function parsePropertyList(value: unknown) { return parseArray(value, parsePropertyOut); }
+
+export function parseUnitOut(value: unknown): UnitOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const unitNumber = asString(value.unit_number); const rentValue = asNumber(value.rent_value); const propertyId = asNumber(value.property_id);
+  if (id === null || !unitNumber || rentValue === null || propertyId === null || !isOneOf(value.status, unitStatuses)) return null;
+  return { id, unit_number: unitNumber, unit_type: asNullableString(value.unit_type) ?? null, area: asNullableNumber(value.area) ?? null, rooms_count: asNullableNumber(value.rooms_count) ?? null, floor: asNullableNumber(value.floor) ?? null, rent_value: rentValue, property_id: propertyId, status: value.status };
+}
+export function parseUnitList(value: unknown) { return parseArray(value, parseUnitOut); }
+
+export function parseOwnerOut(value: unknown): OwnerOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const fullName = asString(value.full_name);
+  if (id === null || !fullName) return null;
+  return { id, full_name: fullName, phone: asNullableString(value.phone) ?? null, email: asNullableString(value.email) ?? null, national_id: asNullableString(value.national_id) ?? null, notes: asNullableString(value.notes) ?? null };
+}
+export function parseOwnerList(value: unknown) { return parseArray(value, parseOwnerOut); }
+export function parseTenantOut(value: unknown): TenantOut | null { return parseOwnerOut(value); }
+export function parseTenantList(value: unknown) { return parseArray(value, parseTenantOut); }
+
+export function parseContractOut(value: unknown): ContractOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const propertyId = asNumber(value.property_id); const unitId = asNumber(value.unit_id); const ownerId = asNumber(value.owner_id); const tenantId = asNumber(value.tenant_id); const startDate = asString(value.start_date); const endDate = asString(value.end_date); const rentValue = asString(value.rent_value);
+  if (id === null || propertyId === null || unitId === null || ownerId === null || tenantId === null || !startDate || !endDate || !rentValue || !isOneOf(value.status, contractStatuses)) return null;
+  return { id, property_id: propertyId, unit_id: unitId, owner_id: ownerId, tenant_id: tenantId, start_date: startDate, end_date: endDate, rent_value: rentValue, payment_frequency: isOneOf(value.payment_frequency, paymentFrequencies) ? value.payment_frequency : undefined, deposit_amount: asString(value.deposit_amount) || undefined, terms: asNullableString(value.terms) ?? null, status: value.status, renewed_from_id: asNullableNumber(value.renewed_from_id) ?? null };
+}
+export function parseContractList(value: unknown) { return parseArray(value, parseContractOut); }
+
+export function parseMaintenanceOut(value: unknown): MaintenanceOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const issueType = asString(value.issue_type); const cost = asNumber(value.cost);
+  if (id === null || !issueType || cost === null || !isOneOf(value.status, maintenanceStatuses)) return null;
+  return { id, issue_type: issueType, status: value.status, cost, property_id: asNullableNumber(value.property_id) ?? null, unit_id: asNullableNumber(value.unit_id) ?? null, priority: isOneOf(value.priority, maintenancePriorities) ? value.priority : undefined, description: asNullableString(value.description) ?? null, vendor_id: asNullableNumber(value.vendor_id) ?? null, execution_date: asNullableString(value.execution_date) ?? null };
+}
+export function parseMaintenanceList(value: unknown) { return parseArray(value, parseMaintenanceOut); }
+
+export function parseServiceOut(value: unknown): ServiceOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const propertyId = asNumber(value.property_id); const serviceName = asString(value.service_name);
+  if (id === null || propertyId === null || !serviceName) return null;
+  return { id, property_id: propertyId, service_name: serviceName, provider_id: asNullableNumber(value.provider_id) ?? null, cost: asNullableNumber(value.cost) ?? null, due_date: asNullableString(value.due_date) ?? null };
+}
+export function parseServiceList(value: unknown) { return parseArray(value, parseServiceOut); }
+
+export function parseVendorOut(value: unknown): VendorOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const name = asString(value.name);
+  if (id === null || !name) return null;
+  return { id, name, phone: asNullableString(value.phone) ?? null, email: asNullableString(value.email) ?? null, services_provided: asNullableString(value.services_provided) ?? null, notes: asNullableString(value.notes) ?? null };
+}
+export function parseVendorList(value: unknown) { return parseArray(value, parseVendorOut); }
+
+export function parsePaymentOut(value: unknown): PaymentOut | null {
+  if (!isRecord(value)) return null;
+  const id = asNumber(value.id); const contractId = asNumber(value.contract_id); const dueDate = asString(value.due_date); const amountDue = asString(value.amount_due); const amountPaid = asString(value.amount_paid); const discount = asString(value.discount); const penalty = asString(value.penalty);
+  if (id === null || contractId === null || !dueDate || !amountDue || !amountPaid || !discount || !penalty || !isOneOf(value.status, paymentStatuses)) return null;
+  return { id, contract_id: contractId, due_date: dueDate, amount_due: amountDue, amount_paid: amountPaid, status: value.status, paid_date: asNullableString(value.paid_date) ?? null, discount, penalty, receipt_number: asNullableString(value.receipt_number) ?? null };
+}
+export function parsePaymentList(value: unknown) { return parseArray(value, parsePaymentOut); }

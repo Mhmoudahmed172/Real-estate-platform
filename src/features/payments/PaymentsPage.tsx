@@ -1,0 +1,60 @@
+import { motion } from "framer-motion";
+import { Receipt } from "lucide-react";
+import { useMemo } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
+import { PaymentStatusBadge } from "@/components/ui/StatusBadge";
+import { usePaymentsList } from "@/features/payments/usePayments";
+import { formatCurrency, formatDate, parseMoney } from "@/lib/format";
+import { paymentStatusLabels } from "@/lib/labels";
+import { pageMotion } from "@/lib/motion";
+import { paymentStatuses, type PaymentOut, type PaymentStatus } from "@/types/resources";
+
+const PAGE_SIZE = 20;
+
+export function PaymentsPage() {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const contractId = searchParams.get("contract_id") ? Number(searchParams.get("contract_id")) : null;
+  const status = (searchParams.get("status") as PaymentStatus | null) ?? null;
+  const dueFrom = searchParams.get("due_from") ?? "";
+  const dueTo = searchParams.get("due_to") ?? "";
+  const skip = Number(searchParams.get("skip") ?? 0);
+  const params = useMemo(() => ({ contract_id: contractId, status_filter: status, due_from: dueFrom || null, due_to: dueTo || null, skip, limit: PAGE_SIZE }), [contractId, dueFrom, dueTo, skip, status]);
+  const listQuery = usePaymentsList(params);
+
+  function updateParams(next: Record<string, string | null>) {
+    const resolved = new URLSearchParams(searchParams);
+    Object.entries(next).forEach(([key, value]) => value ? resolved.set(key, value) : resolved.delete(key));
+    if (next.contract_id !== undefined || next.status !== undefined || next.due_from !== undefined || next.due_to !== undefined) resolved.delete("skip");
+    setSearchParams(resolved);
+  }
+
+  const columns: Array<DataTableColumn<PaymentOut>> = [
+    { id: "payment", header: "الدفعة", cell: (row) => <div className="flex min-w-0 items-center gap-3"><span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary"><Receipt aria-hidden="true" className="size-4" /></span><div><p className="font-semibold text-foreground">دفعة #{row.id}</p><p className="text-meta">عقد #{row.contract_id}</p></div></div> },
+    { id: "due", header: "الاستحقاق", cell: (row) => formatDate(row.due_date) },
+    { id: "amount", header: "المستحق", numeric: true, cell: (row) => formatCurrency(parseMoney(row.amount_due) ?? 0) },
+    { id: "paid", header: "المدفوع", numeric: true, cell: (row) => formatCurrency(parseMoney(row.amount_paid) ?? 0) },
+    { id: "paidDate", header: "تاريخ الدفع", cell: (row) => row.paid_date ? formatDate(row.paid_date) : "—" },
+    { id: "status", header: "الحالة", cell: (row) => <PaymentStatusBadge status={row.status} /> },
+  ];
+
+  return <motion.div {...pageMotion}><PageContainer>
+    <PageHeader eyebrow="المدفوعات" title="المدفوعات" description="متابعة الدفعات المجدولة حسب العقد والحالة ونطاق تاريخ الاستحقاق." />
+    <section className="grid gap-4 rounded-xl border border-border bg-card p-4 shadow-card md:grid-cols-5 md:items-end">
+      <label className="block space-y-1.5"><span className="text-meta">رقم العقد</span><Input className="rounded-xl" inputMode="numeric" defaultValue={contractId ?? ""} placeholder="كل العقود" onBlur={(event) => updateParams({ contract_id: event.target.value.trim() || null })} onKeyDown={(event) => { if (event.key === "Enter") updateParams({ contract_id: event.currentTarget.value.trim() || null }); }} /></label>
+      <div className="space-y-1.5"><p className="text-meta">الحالة</p><Select value={status ?? "all"} onValueChange={(value) => updateParams({ status: value === "all" ? null : value })}><SelectTrigger className="rounded-xl"><SelectValue placeholder="كل الحالات" /></SelectTrigger><SelectContent><SelectItem value="all">كل الحالات</SelectItem>{paymentStatuses.map((item) => <SelectItem key={item} value={item}>{paymentStatusLabels[item]}</SelectItem>)}</SelectContent></Select></div>
+      <label className="block space-y-1.5"><span className="text-meta">من تاريخ</span><Input className="rounded-xl" type="date" defaultValue={dueFrom} onBlur={(event) => updateParams({ due_from: event.target.value || null })} /></label>
+      <label className="block space-y-1.5"><span className="text-meta">إلى تاريخ</span><Input className="rounded-xl" type="date" defaultValue={dueTo} onBlur={(event) => updateParams({ due_to: event.target.value || null })} /></label>
+      <Button className="h-11 rounded-xl" variant="outline" onClick={() => setSearchParams(new URLSearchParams())}>مسح التصفية</Button>
+    </section>
+    {listQuery.isError ? <ErrorState title="تعذر تحميل المدفوعات" description="تعذر تحميل قائمة المدفوعات." onRetry={() => void listQuery.refetch()} /> : <><div className="hidden md:block"><DataTable actions={(row) => <Button asChild className="rounded-full" size="sm" variant="ghost"><Link to={`/payments/${row.id}`}>عرض</Link></Button>} columns={columns} data={listQuery.data ?? []} emptyDescription="لا توجد مدفوعات مطابقة لعوامل التصفية الحالية." emptyTitle="لا توجد مدفوعات" getRowId={(row) => row.id} hasMore={(listQuery.data?.length ?? 0) === PAGE_SIZE} hasPrevious={skip > 0} loading={listQuery.isPending} onNextPage={() => updateParams({ skip: String(skip + PAGE_SIZE) })} onPreviousPage={() => updateParams({ skip: skip <= PAGE_SIZE ? null : String(skip - PAGE_SIZE) })} onRowClick={(row) => navigate(`/payments/${row.id}`)} /></div><div className="grid gap-2 md:hidden">{listQuery.isPending ? <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل المدفوعات...</p> : (listQuery.data ?? []).length === 0 ? <EmptyState compact description="لا توجد مدفوعات مطابقة لعوامل التصفية الحالية." title="لا توجد مدفوعات" /> : null}{(listQuery.data ?? []).map((payment) => <Link key={payment.id} className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover" to={`/payments/${payment.id}`}><div className="flex items-start justify-between gap-3"><div><p className="font-semibold text-foreground">دفعة #{payment.id}</p><p className="mt-1 text-meta">عقد #{payment.contract_id} · {formatCurrency(parseMoney(payment.amount_due) ?? 0)}</p></div><PaymentStatusBadge status={payment.status} /></div><p className="mt-2 text-meta">{formatDate(payment.due_date)}</p></Link>)}</div></>}
+  </PageContainer></motion.div>;
+}
