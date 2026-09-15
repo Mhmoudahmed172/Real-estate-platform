@@ -21,7 +21,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <Building2 aria-hidden="true" className="size-5" />
         </div>
         <div className="min-w-0">
-          <p className="font-numeric text-[15px] font-bold leading-none text-foreground">Apex Realty OS</p>
+          <p className="font-numeric text-[15px] font-bold leading-none text-foreground">Phoenix Property Manager</p>
           <p className="mt-1.5 truncate text-meta">نظام إدارة العقارات المطور</p>
         </div>
       </div>

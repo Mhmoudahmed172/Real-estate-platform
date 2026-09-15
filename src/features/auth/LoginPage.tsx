@@ -44,7 +44,7 @@ export function LoginPage() {
           <div className="mb-4 flex size-14 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Building2 aria-hidden="true" className="size-7" />
           </div>
-          <CardTitle>Apex Realty OS</CardTitle>
+          <CardTitle>Phoenix Property Manager</CardTitle>
           <p className="text-sm text-muted-foreground">تسجيل الدخول إلى نظام إدارة العقارات</p>
         </CardHeader>
         <CardContent>
