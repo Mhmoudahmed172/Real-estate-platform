@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_API_PROXY_TARGET ?? "https://phoenixsystems.online";
 
   return {
-    base: mode === "production" ? "/property_manager/" : "/",
+    base: "/",
     plugins: [react()],
     resolve: {
       alias: {
