@@ -150,7 +150,7 @@ export function UsersPage() {
                 loading={usersQuery.isPending}
                 onNextPage={() => updateSkip(skip + PAGE_SIZE)}
                 onPreviousPage={() => updateSkip(skip <= PAGE_SIZE ? null : skip - PAGE_SIZE)}
-                onRowClick={(row) => navigate(`/users/${row.id}/edit`)}
+                onRowClick={can("users.update") ? (row) => navigate(`/users/${row.id}/edit`) : undefined}
               />
             </div>
             <div className="grid gap-2 md:hidden">

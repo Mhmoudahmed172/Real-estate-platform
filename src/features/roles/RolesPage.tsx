@@ -13,13 +13,14 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useAuthorization } from "@/features/auth/useAuthorization";
 import { RoleFormDialog } from "@/features/roles/RoleFormDialog";
-import { useManagedRolesList, useRoleMutations } from "@/features/roles/useRoles";
+import { useManagedRolesList, usePermissionsCatalog, useRoleMutations } from "@/features/roles/useRoles";
 import { pageMotion } from "@/lib/motion";
 import type { RoleCreatePayload, RoleDetail, RoleUpdatePayload } from "@/types/rbac";
 
 export function RolesPage() {
   const { can } = useAuthorization();
   const rolesQuery = useManagedRolesList();
+  const permissionsQuery = usePermissionsCatalog();
   const { createMutation, updateMutation, deleteMutation } = useRoleMutations();
   const [dialogMode, setDialogMode] = useState<"create" | "edit" | "view" | null>(null);
   const [activeRole, setActiveRole] = useState<RoleDetail | null>(null);
@@ -126,7 +127,7 @@ export function RolesPage() {
               </Button>
             </Can>
           }
-          description="إدارة أدوار المستخدمين وتحديد صلاحيات الوصول إلى النظام"
+          description={`إدارة أدوار المستخدمين وتحديد صلاحيات الوصول إلى النظام${permissionsQuery.data ? ` · ${permissionsQuery.data.length} صلاحية` : ""}`}
           eyebrow="المستخدمون والصلاحيات"
           title="الأدوار والصلاحيات"
         />
