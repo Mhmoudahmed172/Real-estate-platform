@@ -3,6 +3,7 @@ import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SearchInput } from "@/components/forms/SearchInput";
 import { Button } from "@/components/ui/Button";
+import { Can } from "@/app/guards/Can";
 import { useAuth } from "@/features/auth/useAuth";
 
 type TopbarProps = {
@@ -43,11 +44,13 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
           <span className="rounded-full bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-sm">العربية</span>
           <span className="px-2.5 py-1 text-[11px] font-medium text-muted-foreground">EN</span>
         </div>
-        <Button aria-label="إضافة عقار" asChild className="rounded-full shadow-sm" size="icon">
-          <Link to="/properties/new">
-            <Plus aria-hidden="true" className="size-4" />
-          </Link>
-        </Button>
+        <Can permission="properties.create">
+          <Button aria-label="إضافة عقار" asChild className="rounded-full shadow-sm" size="icon">
+            <Link to="/properties/new">
+              <Plus aria-hidden="true" className="size-4" />
+            </Link>
+          </Button>
+        </Can>
         <div className="flex min-w-0 items-center gap-2.5 rounded-full bg-muted/70 py-1 pe-3 ps-1">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
             {initial}
