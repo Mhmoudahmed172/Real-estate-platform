@@ -1,9 +1,16 @@
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 const ensureLeadingSlash = (value: string) => (value.startsWith("/") ? value : `/${value}`);
 
-const apiBaseUrl = trimTrailingSlash(
-  import.meta.env.VITE_API_BASE_URL ?? "https://phoenixsystems.online/property_api",
-);
+function getApiBaseUrl() {
+  const configured = import.meta.env.VITE_API_BASE_URL;
+  if (configured) return trimTrailingSlash(configured);
+  if (import.meta.env.PROD) {
+    throw new Error("VITE_API_BASE_URL must be configured for production builds.");
+  }
+  return "http://localhost:8000";
+}
+
+const apiBaseUrl = getApiBaseUrl();
 
 const apiPrefix = ensureLeadingSlash(import.meta.env.VITE_API_PREFIX ?? "/api/v1");
 
