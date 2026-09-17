@@ -17,8 +17,8 @@ const lazyPage = <TExport extends string>(
     return { default: module[exportName] };
   });
 
-const withSuspense = (element: ReactElement) => (
-  <Suspense fallback={<LoadingState label="جاري تحميل الصفحة..." fullScreen />}>{element}</Suspense>
+const withSuspense = (element: ReactElement, fullScreen = false) => (
+  <Suspense fallback={<LoadingState fullScreen={fullScreen} label="جاري تحميل الصفحة..." />}>{element}</Suspense>
 );
 
 const LoginPage = lazyPage(() => import("@/features/auth/LoginPage"), "LoginPage");
@@ -68,7 +68,7 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
   [
   {
     path: "/login",
-    element: <GuestRoute>{withSuspense(<LoginPage />)}</GuestRoute>,
+    element: <GuestRoute>{withSuspense(<LoginPage />, true)}</GuestRoute>,
   },
   {
     path: "/",

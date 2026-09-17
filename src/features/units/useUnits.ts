@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertiesApi } from "@/api/properties.api";
 import { unitsApi } from "@/api/units.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { UnitCreate, UnitListParams, UnitUpdate } from "@/types/resources";
@@ -11,6 +12,7 @@ export function useUnitsList(params: UnitListParams) {
   return useQuery({
     queryKey: unitsKeys.list(params),
     queryFn: () => unitsApi.list(params),
+    ...listQueryDefaults,
   });
 }
 

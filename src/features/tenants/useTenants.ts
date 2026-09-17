@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tenantsApi } from "@/api/tenants.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { TenantCreate, TenantListParams, TenantUpdate } from "@/types/resources";
@@ -10,6 +11,7 @@ export function useTenantsList(params: TenantListParams) {
   return useQuery({
     queryKey: tenantsKeys.list(params),
     queryFn: () => tenantsApi.list(params),
+    ...listQueryDefaults,
   });
 }
 

@@ -34,8 +34,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     async (payload: LoginRequest) => {
       const tokens = await authApi.login(payload);
       tokenStorage.setTokens(tokens);
+      await queryClient.fetchQuery({
+        queryKey: queryKeys.auth.me,
+        queryFn: () => authApi.me(),
+      });
       setHasToken(true);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.me });
     },
     [queryClient],
   );

@@ -2,6 +2,22 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Card, CardContent } from "@/components/ui/Card";
 
+export function DashboardSectionSkeleton({ chart = false }: { chart?: boolean }) {
+  return (
+    <Card className="h-full">
+      <CardContent className={chart ? "pt-6" : "space-y-3 pt-6"}>
+        <Skeleton className="h-5 w-44" />
+        {chart ? <Skeleton className="h-[280px] w-full" /> : (
+          <>
+            <Skeleton className="h-14 w-full rounded-xl" />
+            <Skeleton className="h-14 w-full rounded-xl" />
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function DashboardSkeleton() {
   return (
     <PageContainer>

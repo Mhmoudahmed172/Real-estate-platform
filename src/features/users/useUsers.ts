@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usersApi } from "@/api/users.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id, PaginationParams } from "@/types/api";
 import type { UserCreate, UserUpdate } from "@/types/auth";
@@ -7,7 +8,7 @@ import type { UserCreate, UserUpdate } from "@/types/auth";
 const usersKeys = queryKeys.resource("users");
 
 export function useUsersList(params: PaginationParams) {
-  return useQuery({ queryKey: usersKeys.list(params), queryFn: () => usersApi.list(params) });
+  return useQuery({ queryKey: usersKeys.list(params), queryFn: () => usersApi.list(params), ...listQueryDefaults });
 }
 
 export function useUser(id: Id | undefined) {

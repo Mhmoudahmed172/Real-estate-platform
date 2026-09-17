@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ownersApi } from "@/api/owners.api";
 import { propertiesApi } from "@/api/properties.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { PropertyCreate, PropertyListParams, PropertyUpdate } from "@/types/resources";
@@ -9,6 +10,7 @@ export function usePropertiesList(params: PropertyListParams) {
   return useQuery({
     queryKey: queryKeys.properties.list(params),
     queryFn: () => propertiesApi.list(params),
+    ...listQueryDefaults,
   });
 }
 
@@ -40,6 +42,7 @@ export function useOwnersOptions() {
   return useQuery({
     queryKey: queryKeys.resource("owners").list({ limit: 200 }),
     queryFn: () => ownersApi.list({ limit: 200 }),
+    ...listQueryDefaults,
   });
 }
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { vendorsApi } from "@/api/vendors.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { VendorCreate, VendorListParams, VendorUpdate } from "@/types/resources";
@@ -8,7 +9,7 @@ const vendorsKeys = queryKeys.resource("vendors");
 const maintenanceKeys = queryKeys.resource("maintenance");
 
 export function useVendorsList(params: VendorListParams) {
-  return useQuery({ queryKey: vendorsKeys.list(params), queryFn: () => vendorsApi.list(params) });
+  return useQuery({ queryKey: vendorsKeys.list(params), queryFn: () => vendorsApi.list(params), ...listQueryDefaults });
 }
 
 export function useVendor(id: Id | undefined) {

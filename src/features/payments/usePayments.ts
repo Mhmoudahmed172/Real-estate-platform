@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { contractsApi } from "@/api/contracts.api";
 import { paymentsApi } from "@/api/payments.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { PaymentAdjustment, PaymentListParams, PaymentRecord } from "@/types/resources";
@@ -14,7 +15,7 @@ function makeIdempotencyKey() {
 }
 
 export function usePaymentsList(params: PaymentListParams) {
-  return useQuery({ queryKey: paymentsKeys.list(params), queryFn: () => paymentsApi.list(params) });
+  return useQuery({ queryKey: paymentsKeys.list(params), queryFn: () => paymentsApi.list(params), ...listQueryDefaults });
 }
 
 export function usePayment(id: Id | undefined) {

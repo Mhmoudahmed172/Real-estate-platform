@@ -7,7 +7,7 @@ import { DashboardExpiringContracts } from "@/features/dashboard/DashboardExpiri
 import { DashboardKpiCard } from "@/features/dashboard/DashboardKpiCard";
 import { DashboardOpenMaintenance } from "@/features/dashboard/DashboardOpenMaintenance";
 import { DashboardPortfolio } from "@/features/dashboard/DashboardPortfolio";
-import { DashboardSkeleton } from "@/features/dashboard/DashboardSkeleton";
+import { DashboardSectionSkeleton, DashboardSkeleton } from "@/features/dashboard/DashboardSkeleton";
 import { DashboardWelcome } from "@/features/dashboard/DashboardWelcome";
 import { useDashboardWorkspace } from "@/features/dashboard/useDashboardWorkspace";
 import { pageMotion, staggerContainer } from "@/lib/motion";
@@ -20,9 +20,10 @@ const kpiIcons = {
 } as const;
 
 export function DashboardPage() {
-  const { isLoading, isError, refetch, viewModel } = useDashboardWorkspace();
+  const { isCorePending, isError, refetch, viewModel, paymentsReady, expiringReady, maintenanceReady } =
+    useDashboardWorkspace();
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isCorePending) return <DashboardSkeleton />;
   if (isError || !viewModel) {
     return (
       <PageContainer>
@@ -45,17 +46,29 @@ export function DashboardPage() {
           ))}
         </motion.section>
         <section className="grid items-stretch gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-          <DashboardCollectionsChart
-            collectedYtd={viewModel.kpis.find((kpi) => kpi.id === "collected")?.value ?? null}
-            mapped={viewModel.collectionsMapped}
-            occupancyPercent={viewModel.occupancyPercent}
-            points={viewModel.collections}
-          />
+          {paymentsReady ? (
+            <DashboardCollectionsChart
+              collectedYtd={viewModel.kpis.find((kpi) => kpi.id === "collected")?.value ?? null}
+              mapped={viewModel.collectionsMapped}
+              occupancyPercent={viewModel.occupancyPercent}
+              points={viewModel.collections}
+            />
+          ) : (
+            <DashboardSectionSkeleton chart />
+          )}
           <DashboardPortfolio featuredProperty={viewModel.featuredProperty} segments={viewModel.portfolio} />
         </section>
         <section className="grid items-stretch gap-4 xl:grid-cols-2">
-          <DashboardExpiringContracts rows={viewModel.expiringContracts} />
-          <DashboardOpenMaintenance rows={viewModel.openMaintenance} />
+          {expiringReady ? (
+            <DashboardExpiringContracts rows={viewModel.expiringContracts} />
+          ) : (
+            <DashboardSectionSkeleton />
+          )}
+          {maintenanceReady ? (
+            <DashboardOpenMaintenance rows={viewModel.openMaintenance} />
+          ) : (
+            <DashboardSectionSkeleton />
+          )}
         </section>
         {viewModel.snapshotTruncated ? (
           <p className="text-xs text-muted-foreground">

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertiesApi } from "@/api/properties.api";
 import { servicesApi } from "@/api/services.api";
 import { vendorsApi } from "@/api/vendors.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { ServiceCreate, ServiceListParams, ServiceUpdate } from "@/types/resources";
@@ -10,7 +11,7 @@ const servicesKeys = queryKeys.resource("services");
 const vendorsKeys = queryKeys.resource("vendors");
 
 export function useServicesList(params: ServiceListParams) {
-  return useQuery({ queryKey: servicesKeys.list(params), queryFn: () => servicesApi.list(params) });
+  return useQuery({ queryKey: servicesKeys.list(params), queryFn: () => servicesApi.list(params), ...listQueryDefaults });
 }
 
 export function useService(id: Id | undefined) {

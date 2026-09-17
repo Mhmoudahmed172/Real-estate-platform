@@ -4,6 +4,7 @@ import { ownersApi } from "@/api/owners.api";
 import { propertiesApi } from "@/api/properties.api";
 import { tenantsApi } from "@/api/tenants.api";
 import { unitsApi } from "@/api/units.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { ContractCreate, ContractListParams, ContractRenewal, ContractUpdate } from "@/types/resources";
@@ -12,7 +13,7 @@ const contractsKeys = queryKeys.resource("contracts");
 const paymentsKeys = queryKeys.resource("payments");
 
 export function useContractsList(params: ContractListParams) {
-  return useQuery({ queryKey: contractsKeys.list(params), queryFn: () => contractsApi.list(params) });
+  return useQuery({ queryKey: contractsKeys.list(params), queryFn: () => contractsApi.list(params), ...listQueryDefaults });
 }
 
 export function useContract(id: Id | undefined) {
@@ -24,7 +25,11 @@ export function useContract(id: Id | undefined) {
 }
 
 export function useExpiringContracts(days = 30) {
-  return useQuery({ queryKey: [...contractsKeys.lists, "expiring", days] as const, queryFn: () => contractsApi.expiring({ days }) });
+  return useQuery({
+    queryKey: [...contractsKeys.lists, "expiring", days] as const,
+    queryFn: () => contractsApi.expiring({ days }),
+    ...listQueryDefaults,
+  });
 }
 
 export function useContractPayments(contractId: number | undefined) {

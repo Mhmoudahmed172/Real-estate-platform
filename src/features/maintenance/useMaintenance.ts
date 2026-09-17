@@ -3,6 +3,7 @@ import { maintenanceApi } from "@/api/maintenance.api";
 import { propertiesApi } from "@/api/properties.api";
 import { unitsApi } from "@/api/units.api";
 import { vendorsApi } from "@/api/vendors.api";
+import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Id } from "@/types/api";
 import type { Assignment, MaintenanceCreate, MaintenanceListParams, MaintenanceTransition, MaintenanceUpdate } from "@/types/resources";
@@ -11,7 +12,7 @@ const maintenanceKeys = queryKeys.resource("maintenance");
 const vendorsKeys = queryKeys.resource("vendors");
 
 export function useMaintenanceList(params: MaintenanceListParams) {
-  return useQuery({ queryKey: maintenanceKeys.list(params), queryFn: () => maintenanceApi.list(params) });
+  return useQuery({ queryKey: maintenanceKeys.list(params), queryFn: () => maintenanceApi.list(params), ...listQueryDefaults });
 }
 
 export function useMaintenanceRequest(id: Id | undefined) {
