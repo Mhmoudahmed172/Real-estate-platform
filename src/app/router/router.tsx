@@ -1,7 +1,9 @@
 import { lazy, Suspense, type ComponentType, type ReactElement } from "react";
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { ProtectedRoute } from "@/app/guards/ProtectedRoute";
 import { GuestRoute } from "@/app/guards/GuestRoute";
+import { HomeRedirect } from "@/app/guards/HomeRedirect";
+import { PermissionGuard } from "@/app/guards/PermissionGuard";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { LoadingState } from "@/components/feedback/LoadingState";
 import { AppShell } from "@/components/layout/AppShell";
@@ -19,6 +21,10 @@ const lazyPage = <TExport extends string>(
 
 const withSuspense = (element: ReactElement, fullScreen = false) => (
   <Suspense fallback={<LoadingState fullScreen={fullScreen} label="جاري تحميل الصفحة..." />}>{element}</Suspense>
+);
+
+const guarded = (permission: string, element: ReactElement) => (
+  <PermissionGuard permission={permission}>{withSuspense(element)}</PermissionGuard>
 );
 
 const LoginPage = lazyPage(() => import("@/features/auth/LoginPage"), "LoginPage");
@@ -60,6 +66,7 @@ const VendorEditPage = lazyPage(() => import("@/features/vendors/VendorEditPage"
 const UsersPage = lazyPage(() => import("@/features/users/UsersPage"), "UsersPage");
 const UserCreatePage = lazyPage(() => import("@/features/users/UserCreatePage"), "UserCreatePage");
 const UserEditPage = lazyPage(() => import("@/features/users/UserEditPage"), "UserEditPage");
+const RolesPage = lazyPage(() => import("@/features/roles/RolesPage"), "RolesPage");
 const ReportsPage = lazyPage(() => import("@/features/reports/ReportsPage"), "ReportsPage");
 
 const routerBasename = import.meta.env.BASE_URL.replace(/\/+$/, "") || "/";
@@ -79,47 +86,48 @@ export const router: ReturnType<typeof createBrowserRouter> = createBrowserRoute
     ),
     errorElement: <ErrorState title="تعذر تحميل الصفحة" description="حدث خطأ غير متوقع أثناء فتح المسار." />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
-      { path: "dashboard", element: withSuspense(<DashboardPage />) },
-      { path: "properties", element: withSuspense(<PropertiesPage />) },
-      { path: "properties/new", element: withSuspense(<PropertyCreatePage />) },
-      { path: "properties/:id", element: withSuspense(<PropertyDetailsPage />) },
-      { path: "properties/:id/edit", element: withSuspense(<PropertyEditPage />) },
-      { path: "units", element: withSuspense(<UnitsPage />) },
-      { path: "units/new", element: withSuspense(<UnitCreatePage />) },
-      { path: "units/:id", element: withSuspense(<UnitDetailsPage />) },
-      { path: "units/:id/edit", element: withSuspense(<UnitEditPage />) },
-      { path: "owners", element: withSuspense(<OwnersPage />) },
-      { path: "owners/new", element: withSuspense(<OwnerCreatePage />) },
-      { path: "owners/:id", element: withSuspense(<OwnerDetailsPage />) },
-      { path: "owners/:id/edit", element: withSuspense(<OwnerEditPage />) },
-      { path: "tenants", element: withSuspense(<TenantsPage />) },
-      { path: "tenants/new", element: withSuspense(<TenantCreatePage />) },
-      { path: "tenants/:id", element: withSuspense(<TenantDetailsPage />) },
-      { path: "tenants/:id/edit", element: withSuspense(<TenantEditPage />) },
-      { path: "contracts", element: withSuspense(<ContractsPage />) },
-      { path: "contracts/new", element: withSuspense(<ContractCreatePage />) },
-      { path: "contracts/:id", element: withSuspense(<ContractDetailsPage />) },
-      { path: "contracts/:id/edit", element: withSuspense(<ContractEditPage />) },
-      { path: "payments", element: withSuspense(<PaymentsPage />) },
-      { path: "payments/:id", element: withSuspense(<PaymentDetailsPage />) },
-      { path: "maintenance", element: withSuspense(<MaintenancePage />) },
-      { path: "maintenance/new", element: withSuspense(<MaintenanceCreatePage />) },
-      { path: "maintenance/:id", element: withSuspense(<MaintenanceDetailsPage />) },
-      { path: "maintenance/:id/edit", element: withSuspense(<MaintenanceEditPage />) },
-      { path: "services", element: withSuspense(<ServicesPage />) },
-      { path: "services/new", element: withSuspense(<ServiceCreatePage />) },
-      { path: "services/:id", element: withSuspense(<ServiceDetailsPage />) },
-      { path: "services/:id/edit", element: withSuspense(<ServiceEditPage />) },
-      { path: "vendors", element: withSuspense(<VendorsPage />) },
-      { path: "vendors/new", element: withSuspense(<VendorCreatePage />) },
-      { path: "vendors/:id", element: withSuspense(<VendorDetailsPage />) },
-      { path: "vendors/:id/edit", element: withSuspense(<VendorEditPage />) },
-      { path: "users", element: withSuspense(<UsersPage />) },
-      { path: "users/new", element: withSuspense(<UserCreatePage />) },
-      { path: "users/:id/edit", element: withSuspense(<UserEditPage />) },
-      { path: "reports", element: withSuspense(<ReportsPage />) },
-      { path: "reports/:kind", element: withSuspense(<ReportsPage />) },
+      { index: true, element: <HomeRedirect /> },
+      { path: "dashboard", element: guarded("dashboard.view", <DashboardPage />) },
+      { path: "properties", element: guarded("properties.view", <PropertiesPage />) },
+      { path: "properties/new", element: guarded("properties.create", <PropertyCreatePage />) },
+      { path: "properties/:id", element: guarded("properties.view", <PropertyDetailsPage />) },
+      { path: "properties/:id/edit", element: guarded("properties.update", <PropertyEditPage />) },
+      { path: "units", element: guarded("units.view", <UnitsPage />) },
+      { path: "units/new", element: guarded("units.create", <UnitCreatePage />) },
+      { path: "units/:id", element: guarded("units.view", <UnitDetailsPage />) },
+      { path: "units/:id/edit", element: guarded("units.update", <UnitEditPage />) },
+      { path: "owners", element: guarded("owners.view", <OwnersPage />) },
+      { path: "owners/new", element: guarded("owners.create", <OwnerCreatePage />) },
+      { path: "owners/:id", element: guarded("owners.view", <OwnerDetailsPage />) },
+      { path: "owners/:id/edit", element: guarded("owners.update", <OwnerEditPage />) },
+      { path: "tenants", element: guarded("tenants.view", <TenantsPage />) },
+      { path: "tenants/new", element: guarded("tenants.create", <TenantCreatePage />) },
+      { path: "tenants/:id", element: guarded("tenants.view", <TenantDetailsPage />) },
+      { path: "tenants/:id/edit", element: guarded("tenants.update", <TenantEditPage />) },
+      { path: "contracts", element: guarded("contracts.view", <ContractsPage />) },
+      { path: "contracts/new", element: guarded("contracts.create", <ContractCreatePage />) },
+      { path: "contracts/:id", element: guarded("contracts.view", <ContractDetailsPage />) },
+      { path: "contracts/:id/edit", element: guarded("contracts.update", <ContractEditPage />) },
+      { path: "payments", element: guarded("payments.view", <PaymentsPage />) },
+      { path: "payments/:id", element: guarded("payments.view", <PaymentDetailsPage />) },
+      { path: "maintenance", element: guarded("maintenance.view", <MaintenancePage />) },
+      { path: "maintenance/new", element: guarded("maintenance.create", <MaintenanceCreatePage />) },
+      { path: "maintenance/:id", element: guarded("maintenance.view", <MaintenanceDetailsPage />) },
+      { path: "maintenance/:id/edit", element: guarded("maintenance.update", <MaintenanceEditPage />) },
+      { path: "services", element: guarded("services.view", <ServicesPage />) },
+      { path: "services/new", element: guarded("services.create", <ServiceCreatePage />) },
+      { path: "services/:id", element: guarded("services.view", <ServiceDetailsPage />) },
+      { path: "services/:id/edit", element: guarded("services.update", <ServiceEditPage />) },
+      { path: "vendors", element: guarded("vendors.view", <VendorsPage />) },
+      { path: "vendors/new", element: guarded("vendors.create", <VendorCreatePage />) },
+      { path: "vendors/:id", element: guarded("vendors.view", <VendorDetailsPage />) },
+      { path: "vendors/:id/edit", element: guarded("vendors.update", <VendorEditPage />) },
+      { path: "users", element: guarded("users.view", <UsersPage />) },
+      { path: "users/new", element: guarded("users.create", <UserCreatePage />) },
+      { path: "users/:id/edit", element: guarded("users.update", <UserEditPage />) },
+      { path: "roles", element: guarded("roles.view", <RolesPage />) },
+      { path: "reports", element: guarded("reports.view", <ReportsPage />) },
+      { path: "reports/:kind", element: guarded("reports.view", <ReportsPage />) },
     ],
   },
   {

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Mail, Phone, Plus, Search, UserRound } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useOwnersList } from "@/features/owners/useOwners";
 import { pageMotion } from "@/lib/motion";
 import type { OwnerOut } from "@/types/resources";
@@ -16,6 +18,7 @@ import type { OwnerOut } from "@/types/resources";
 const PAGE_SIZE = 20;
 
 export function OwnersPage() {
+  const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
@@ -59,12 +62,14 @@ export function OwnersPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button asChild className="rounded-full shadow-sm">
-              <Link to="/owners/new">
-                <Plus aria-hidden="true" className="size-4" />
-                إضافة مالك
-              </Link>
-            </Button>
+            <Can permission="owners.create">
+              <Button asChild className="rounded-full shadow-sm">
+                <Link to="/owners/new">
+                  <Plus aria-hidden="true" className="size-4" />
+                  إضافة مالك
+                </Link>
+              </Button>
+            </Can>
           }
           description="إدارة بيانات الملاك ووسائل التواصل حسب الحقول الموثقة."
           eyebrow="إدارة الحسابات"
@@ -105,17 +110,21 @@ export function OwnersPage() {
                     <Button asChild className="rounded-full" size="sm" variant="ghost">
                       <Link to={`/owners/${row.id}`}>عرض</Link>
                     </Button>
-                    <Button asChild className="rounded-full" size="sm" variant="outline">
-                      <Link to={`/owners/${row.id}/edit`}>تعديل</Link>
-                    </Button>
+                    <Can permission="owners.update">
+                      <Button asChild className="rounded-full" size="sm" variant="outline">
+                        <Link to={`/owners/${row.id}/edit`}>تعديل</Link>
+                      </Button>
+                    </Can>
                   </>
                 )}
                 columns={columns}
                 data={listQuery.data ?? []}
                 emptyAction={
-                  <Button asChild size="sm">
-                    <Link to="/owners/new">إضافة مالك</Link>
-                  </Button>
+                  can("owners.create") ? (
+                    <Button asChild size="sm">
+                      <Link to="/owners/new">إضافة مالك</Link>
+                    </Button>
+                  ) : undefined
                 }
                 emptyDescription="لا توجد سجلات ملاك مطابقة."
                 emptyTitle="لا يوجد ملاك"
@@ -135,9 +144,11 @@ export function OwnersPage() {
                 <EmptyState
                   compact
                   action={
-                    <Button asChild size="sm">
-                      <Link to="/owners/new">إضافة مالك</Link>
-                    </Button>
+                    can("owners.create") ? (
+                      <Button asChild size="sm">
+                        <Link to="/owners/new">إضافة مالك</Link>
+                      </Button>
+                    ) : undefined
                   }
                   description="لا توجد سجلات ملاك مطابقة."
                   title="لا يوجد ملاك"

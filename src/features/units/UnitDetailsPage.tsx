@@ -3,6 +3,7 @@ import { ArrowRight, DoorOpen, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
+import { Can } from "@/app/guards/Can";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
@@ -98,16 +99,20 @@ export function UnitDetailsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="rounded-full" variant="outline">
-                <Link to={`/units/${unit.id}/edit`}>
-                  <Pencil aria-hidden="true" className="size-4" />
-                  تعديل
-                </Link>
-              </Button>
-              <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                <Trash2 aria-hidden="true" className="size-4" />
-                حذف
-              </Button>
+              <Can permission="units.update">
+                <Button asChild className="rounded-full" variant="outline">
+                  <Link to={`/units/${unit.id}/edit`}>
+                    <Pencil aria-hidden="true" className="size-4" />
+                    تعديل
+                  </Link>
+                </Button>
+              </Can>
+              <Can permission="units.delete">
+                <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
+                  <Trash2 aria-hidden="true" className="size-4" />
+                  حذف
+                </Button>
+              </Can>
             </div>
           </div>
         </div>

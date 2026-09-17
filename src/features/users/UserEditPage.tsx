@@ -26,7 +26,7 @@ export function UserEditPage() {
   return (
     <motion.div {...pageMotion}>
       <PageContainer>
-        <PageHeader eyebrow="المستخدمون" title="تعديل مستخدم" description="تعديل الحقول التي يدعمها مخطط UserUpdate فقط." />
+        <PageHeader eyebrow="المستخدمون" title="تعديل مستخدم" description="تعديل بيانات المستخدم وتعيين الدور من الأدوار المعرفة في النظام." />
         {userQuery.isPending || rolesQuery.isPending ? (
           <LoadingState label="جاري تحميل المستخدم" />
         ) : userQuery.isError || !userQuery.data ? (

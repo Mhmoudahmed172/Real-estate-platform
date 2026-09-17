@@ -1,5 +1,6 @@
 import { Building2, CalendarDays, FilePlus2, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/features/auth/useAuth";
 
@@ -25,24 +26,30 @@ export function DashboardWelcome({ periodLabel }: DashboardWelcomeProps) {
           <CalendarDays aria-hidden="true" className="size-3.5 text-primary" />
           <span>{periodLabel}</span>
         </div>
-        <Button asChild className="rounded-full" size="sm" variant="outline">
-          <Link to="/reports">
-            <Download aria-hidden="true" className="size-3.5" />
-            تصدير تقرير
-          </Link>
-        </Button>
-        <Button asChild className="rounded-full" size="sm" variant="outline">
-          <Link to="/contracts/new">
-            <FilePlus2 aria-hidden="true" className="size-3.5" />
-            إنشاء عقد
-          </Link>
-        </Button>
-        <Button asChild className="rounded-full shadow-sm" size="sm">
-          <Link to="/properties/new">
-            <Building2 aria-hidden="true" className="size-3.5" />
-            إضافة عقار
-          </Link>
-        </Button>
+        <Can permission="reports.export">
+          <Button asChild className="rounded-full" size="sm" variant="outline">
+            <Link to="/reports">
+              <Download aria-hidden="true" className="size-3.5" />
+              تصدير تقرير
+            </Link>
+          </Button>
+        </Can>
+        <Can permission="contracts.create">
+          <Button asChild className="rounded-full" size="sm" variant="outline">
+            <Link to="/contracts/new">
+              <FilePlus2 aria-hidden="true" className="size-3.5" />
+              إنشاء عقد
+            </Link>
+          </Button>
+        </Can>
+        <Can permission="properties.create">
+          <Button asChild className="rounded-full shadow-sm" size="sm">
+            <Link to="/properties/new">
+              <Building2 aria-hidden="true" className="size-3.5" />
+              إضافة عقار
+            </Link>
+          </Button>
+        </Can>
       </div>
     </header>
   );

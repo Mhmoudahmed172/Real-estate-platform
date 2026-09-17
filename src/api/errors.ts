@@ -64,3 +64,7 @@ export function normalizeApiError(error: unknown): NormalizedApiError {
 export function getApiErrorMessage(error: unknown) {
   return normalizeApiError(error);
 }
+
+export function isForbiddenError(error: unknown) {
+  return normalizeApiError(error).kind === "forbidden";
+}

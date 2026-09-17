@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Building2, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PropertyStatusBadge } from "@/components/ui/StatusBadge";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { usePropertiesList } from "@/features/properties/useProperties";
 import { propertyStatusLabels, propertyTypeLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
@@ -19,6 +21,7 @@ import { propertyStatuses, type PropertyOut, type PropertyStatus } from "@/types
 const PAGE_SIZE = 20;
 
 export function PropertiesPage() {
+  const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [city, setCity] = useState(searchParams.get("city") ?? "");
@@ -101,12 +104,14 @@ export function PropertiesPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button asChild className="rounded-full shadow-sm">
-              <Link to="/properties/new">
-                <Plus aria-hidden="true" className="size-4" />
-                إضافة عقار
-              </Link>
-            </Button>
+            <Can permission="properties.create">
+              <Button asChild className="rounded-full shadow-sm">
+                <Link to="/properties/new">
+                  <Plus aria-hidden="true" className="size-4" />
+                  إضافة عقار
+                </Link>
+              </Button>
+            </Can>
           }
           description="بحث وتصنيف العقارات حسب الحالة والمدينة من عقد القائمة الحالي."
           eyebrow="إدارة المحفظة"
@@ -185,17 +190,21 @@ export function PropertiesPage() {
                     <Button asChild className="rounded-full" size="sm" variant="ghost">
                       <Link to={`/properties/${row.id}`}>عرض</Link>
                     </Button>
-                    <Button asChild className="rounded-full" size="sm" variant="outline">
-                      <Link to={`/properties/${row.id}/edit`}>تعديل</Link>
-                    </Button>
+                    <Can permission="properties.update">
+                      <Button asChild className="rounded-full" size="sm" variant="outline">
+                        <Link to={`/properties/${row.id}/edit`}>تعديل</Link>
+                      </Button>
+                    </Can>
                   </>
                 )}
                 columns={columns}
                 data={listQuery.data ?? []}
                 emptyAction={
-                  <Button asChild size="sm">
-                    <Link to="/properties/new">إضافة عقار</Link>
-                  </Button>
+                  can("properties.create") ? (
+                    <Button asChild size="sm">
+                      <Link to="/properties/new">إضافة عقار</Link>
+                    </Button>
+                  ) : undefined
                 }
                 emptyDescription="لا توجد عقارات مطابقة لعوامل التصفية الحالية."
                 emptyTitle="لا توجد عقارات"
@@ -215,9 +224,11 @@ export function PropertiesPage() {
                 <EmptyState
                   compact
                   action={
-                    <Button asChild size="sm">
-                      <Link to="/properties/new">إضافة عقار</Link>
-                    </Button>
+                    can("properties.create") ? (
+                      <Button asChild size="sm">
+                        <Link to="/properties/new">إضافة عقار</Link>
+                      </Button>
+                    ) : undefined
                   }
                   description="لا توجد عقارات مطابقة لعوامل التصفية الحالية."
                   title="لا توجد عقارات"

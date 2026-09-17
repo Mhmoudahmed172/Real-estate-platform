@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/feedback/Skeleton";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Badge } from "@/components/ui/Badge";
+import { Can } from "@/app/guards/Can";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { PropertyStatusBadge, UnitStatusBadge } from "@/components/ui/StatusBadge";
@@ -112,16 +113,20 @@ export function PropertyDetailsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="rounded-full" variant="outline">
-                <Link to={`/properties/${property.id}/edit`}>
-                  <Pencil aria-hidden="true" className="size-4" />
-                  تعديل
-                </Link>
-              </Button>
-              <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                <Trash2 aria-hidden="true" className="size-4" />
-                حذف
-              </Button>
+              <Can permission="properties.update">
+                <Button asChild className="rounded-full" variant="outline">
+                  <Link to={`/properties/${property.id}/edit`}>
+                    <Pencil aria-hidden="true" className="size-4" />
+                    تعديل
+                  </Link>
+                </Button>
+              </Can>
+              <Can permission="properties.delete">
+                <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
+                  <Trash2 aria-hidden="true" className="size-4" />
+                  حذف
+                </Button>
+              </Can>
             </div>
           </div>
         </div>

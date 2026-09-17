@@ -21,7 +21,7 @@ export function UserCreatePage() {
   return (
     <motion.div {...pageMotion}>
       <PageContainer>
-        <PageHeader eyebrow="المستخدمون" title="إضافة مستخدم" description="إنشاء مستخدم حسب مخطط UserCreate، مع اختيار الدور من /users/roles." />
+        <PageHeader eyebrow="المستخدمون" title="إضافة مستخدم" description="إنشاء مستخدم وتعيين دور من الأدوار المعرفة في النظام." />
         {rolesQuery.isError ? <ErrorState title="تعذر تحميل الأدوار" description="لا يمكن إنشاء مستخدم قبل تحميل قائمة الأدوار من الخادم." onRetry={() => void rolesQuery.refetch()} /> : <UserForm mode="create" roles={rolesQuery.data ?? []} rolesLoading={rolesQuery.isPending} onSubmit={(payload) => submit(payload as UserCreate)} onCancelHref="/users" />}
       </PageContainer>
     </motion.div>

@@ -28,4 +28,10 @@ export const queryKeys = {
   reports: {
     detail: (kind: ReportKind, params?: unknown) => ["reports", kind, params] as const,
   },
+  roles: {
+    all: ["roles"] as const,
+    list: () => ["roles", "list"] as const,
+    permissions: ["roles", "permissions"] as const,
+    detail: (id: Id) => ["roles", "detail", id] as const,
+  },
 };

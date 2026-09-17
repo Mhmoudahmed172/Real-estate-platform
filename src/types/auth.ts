@@ -10,6 +10,7 @@ export type User = {
   is_active: boolean;
   is_superuser: boolean;
   role?: Role | null;
+  permissions?: string[];
 };
 
 export type UserCreate = {

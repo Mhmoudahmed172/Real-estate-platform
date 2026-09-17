@@ -3,6 +3,7 @@ import { ArrowRight, Building2, Pencil, Trash2, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
+import { Can } from "@/app/guards/Can";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
@@ -135,16 +136,20 @@ export function OwnerDetailsPage() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="rounded-full" variant="outline">
-                <Link to={`/owners/${owner.id}/edit`}>
-                  <Pencil aria-hidden="true" className="size-4" />
-                  تعديل
-                </Link>
-              </Button>
-              <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                <Trash2 aria-hidden="true" className="size-4" />
-                حذف
-              </Button>
+              <Can permission="owners.update">
+                <Button asChild className="rounded-full" variant="outline">
+                  <Link to={`/owners/${owner.id}/edit`}>
+                    <Pencil aria-hidden="true" className="size-4" />
+                    تعديل
+                  </Link>
+                </Button>
+              </Can>
+              <Can permission="owners.delete">
+                <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
+                  <Trash2 aria-hidden="true" className="size-4" />
+                  حذف
+                </Button>
+              </Can>
             </div>
           </div>
         </div>

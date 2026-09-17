@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Building2, DoorOpen, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { UnitStatusBadge } from "@/components/ui/StatusBadge";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { usePropertiesOptions, useUnitsList } from "@/features/units/useUnits";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { unitStatusLabels } from "@/lib/labels";
@@ -20,6 +22,7 @@ import { unitStatuses, type UnitOut, type UnitStatus } from "@/types/resources";
 const PAGE_SIZE = 20;
 
 export function UnitsPage() {
+  const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [unitType, setUnitType] = useState(searchParams.get("unit_type") ?? "");
@@ -88,12 +91,14 @@ export function UnitsPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button asChild className="rounded-full shadow-sm">
-              <Link to="/units/new">
-                <Plus aria-hidden="true" className="size-4" />
-                إضافة وحدة
-              </Link>
-            </Button>
+            <Can permission="units.create">
+              <Button asChild className="rounded-full shadow-sm">
+                <Link to="/units/new">
+                  <Plus aria-hidden="true" className="size-4" />
+                  إضافة وحدة
+                </Link>
+              </Button>
+            </Can>
           }
           description="إدارة الوحدات حسب العقار والحالة والحقول التي يدعمها عقد OpenAPI."
           eyebrow="إدارة المحفظة"
@@ -186,17 +191,21 @@ export function UnitsPage() {
                     <Button asChild className="rounded-full" size="sm" variant="ghost">
                       <Link to={`/units/${row.id}`}>عرض</Link>
                     </Button>
-                    <Button asChild className="rounded-full" size="sm" variant="outline">
-                      <Link to={`/units/${row.id}/edit`}>تعديل</Link>
-                    </Button>
+                    <Can permission="units.update">
+                      <Button asChild className="rounded-full" size="sm" variant="outline">
+                        <Link to={`/units/${row.id}/edit`}>تعديل</Link>
+                      </Button>
+                    </Can>
                   </>
                 )}
                 columns={columns}
                 data={listQuery.data ?? []}
                 emptyAction={
-                  <Button asChild size="sm">
-                    <Link to="/units/new">إضافة وحدة</Link>
-                  </Button>
+                  can("units.create") ? (
+                    <Button asChild size="sm">
+                      <Link to="/units/new">إضافة وحدة</Link>
+                    </Button>
+                  ) : undefined
                 }
                 emptyDescription="لا توجد وحدات مطابقة لعوامل التصفية الحالية."
                 emptyTitle="لا توجد وحدات"
@@ -216,9 +225,11 @@ export function UnitsPage() {
                 <EmptyState
                   compact
                   action={
-                    <Button asChild size="sm">
-                      <Link to="/units/new">إضافة وحدة</Link>
-                    </Button>
+                    can("units.create") ? (
+                      <Button asChild size="sm">
+                        <Link to="/units/new">إضافة وحدة</Link>
+                      </Button>
+                    ) : undefined
                   }
                   description="لا توجد وحدات مطابقة لعوامل التصفية الحالية."
                   title="لا توجد وحدات"

@@ -72,7 +72,7 @@ export function UserForm({ mode, user, roles, rolesLoading = false, onSubmit, on
           <FormField error={form.formState.errors.full_name?.message} htmlFor="user-full-name" label="الاسم الكامل">
             <Input id="user-full-name" {...form.register("full_name")} />
           </FormField>
-          <FormField error={form.formState.errors.role_id?.message} htmlFor="user-role" label="الدور" required>
+          <FormField error={form.formState.errors.role_id?.message} htmlFor="user-role" label="تعيين الدور" required>
             <Select
               disabled={rolesLoading || roles.length === 0}
               value={String(form.watch("role_id") || "")}

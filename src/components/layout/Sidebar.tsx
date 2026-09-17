@@ -3,6 +3,7 @@ import { Building2, LogOut } from "lucide-react";
 import { navigationItems } from "@/app/router/routes";
 import { usePortfolioOccupancy } from "@/features/dashboard/usePortfolioOccupancy";
 import { useAuth } from "@/features/auth/useAuth";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,9 @@ type SidebarProps = {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { logout } = useAuth();
+  const { can } = useAuthorization();
   const occupancy = usePortfolioOccupancy();
+  const visibleItems = navigationItems.filter((item) => can(item.permission));
 
   return (
     <aside className="flex h-full w-sidebar flex-col border-l border-border bg-sidebar">
@@ -28,7 +31,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">التنقل</p>
         <ul className="space-y-1.5">
-          {navigationItems.map((item) => (
+          {visibleItems.map((item) => (
             <li key={item.key}>
               <NavLink
                 className={({ isActive }) =>

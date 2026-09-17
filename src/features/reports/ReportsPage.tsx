@@ -3,6 +3,7 @@ import { BarChart3, Download, FileBarChart, Filter } from "lucide-react";
 import { useMemo } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
+import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { FilterToolbar } from "@/components/layout/FilterToolbar";
@@ -129,10 +130,12 @@ export function ReportsPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button className="rounded-full shadow-sm" disabled={exportMutation.isPending} isLoading={exportMutation.isPending} onClick={() => void exportReport()}>
-              <Download aria-hidden="true" className="size-4" />
-              تصدير
-            </Button>
+            <Can permission="reports.export">
+              <Button className="rounded-full shadow-sm" disabled={exportMutation.isPending} isLoading={exportMutation.isPending} onClick={() => void exportReport()}>
+                <Download aria-hidden="true" className="size-4" />
+                تصدير
+              </Button>
+            </Can>
           }
           description="اختيار التقرير، ضبط الفترة والعقار، ثم تصدير النتائج المتاحة من الخادم."
           eyebrow="التقارير"

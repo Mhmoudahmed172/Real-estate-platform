@@ -24,11 +24,12 @@ export function useContract(id: Id | undefined) {
   });
 }
 
-export function useExpiringContracts(days = 30) {
+export function useExpiringContracts(days = 30, enabled = true) {
   return useQuery({
     queryKey: [...contractsKeys.lists, "expiring", days] as const,
     queryFn: () => contractsApi.expiring({ days }),
     ...listQueryDefaults,
+    enabled,
   });
 }
 

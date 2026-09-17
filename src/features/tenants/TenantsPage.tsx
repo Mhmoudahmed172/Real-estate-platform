@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Mail, Phone, Plus, Search, UserRoundCheck } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useTenantsList } from "@/features/tenants/useTenants";
 import { pageMotion } from "@/lib/motion";
 import type { TenantOut } from "@/types/resources";
@@ -16,6 +18,7 @@ import type { TenantOut } from "@/types/resources";
 const PAGE_SIZE = 20;
 
 export function TenantsPage() {
+  const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
@@ -59,12 +62,14 @@ export function TenantsPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button asChild className="rounded-full shadow-sm">
-              <Link to="/tenants/new">
-                <Plus aria-hidden="true" className="size-4" />
-                إضافة مستأجر
-              </Link>
-            </Button>
+            <Can permission="tenants.create">
+              <Button asChild className="rounded-full shadow-sm">
+                <Link to="/tenants/new">
+                  <Plus aria-hidden="true" className="size-4" />
+                  إضافة مستأجر
+                </Link>
+              </Button>
+            </Can>
           }
           description="إدارة بيانات المستأجرين ووسائل التواصل حسب الحقول الموثقة."
           eyebrow="إدارة الحسابات"
@@ -105,17 +110,21 @@ export function TenantsPage() {
                     <Button asChild className="rounded-full" size="sm" variant="ghost">
                       <Link to={`/tenants/${row.id}`}>عرض</Link>
                     </Button>
-                    <Button asChild className="rounded-full" size="sm" variant="outline">
-                      <Link to={`/tenants/${row.id}/edit`}>تعديل</Link>
-                    </Button>
+                    <Can permission="tenants.update">
+                      <Button asChild className="rounded-full" size="sm" variant="outline">
+                        <Link to={`/tenants/${row.id}/edit`}>تعديل</Link>
+                      </Button>
+                    </Can>
                   </>
                 )}
                 columns={columns}
                 data={listQuery.data ?? []}
                 emptyAction={
-                  <Button asChild size="sm">
-                    <Link to="/tenants/new">إضافة مستأجر</Link>
-                  </Button>
+                  can("tenants.create") ? (
+                    <Button asChild size="sm">
+                      <Link to="/tenants/new">إضافة مستأجر</Link>
+                    </Button>
+                  ) : undefined
                 }
                 emptyDescription="لا توجد سجلات مستأجرين مطابقة."
                 emptyTitle="لا يوجد مستأجرون"
@@ -135,9 +144,11 @@ export function TenantsPage() {
                 <EmptyState
                   compact
                   action={
-                    <Button asChild size="sm">
-                      <Link to="/tenants/new">إضافة مستأجر</Link>
-                    </Button>
+                    can("tenants.create") ? (
+                      <Button asChild size="sm">
+                        <Link to="/tenants/new">إضافة مستأجر</Link>
+                      </Button>
+                    ) : undefined
                   }
                   description="لا توجد سجلات مستأجرين مطابقة."
                   title="لا يوجد مستأجرون"

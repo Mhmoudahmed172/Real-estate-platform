@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Receipt,
   Settings2,
+  ShieldCheck,
   Users,
   Wrench,
 } from "lucide-react";
@@ -26,6 +27,7 @@ export type AppRouteKey =
   | "services"
   | "vendors"
   | "users"
+  | "roles"
   | "reports";
 
 export type NavigationItem = {
@@ -34,21 +36,23 @@ export type NavigationItem = {
   labelEn: string;
   href: string;
   icon: LucideIcon;
+  permission: string;
 };
 
 export const navigationItems: NavigationItem[] = [
-  { key: "dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { key: "properties", labelAr: "العقارات", labelEn: "Properties", href: "/properties", icon: Building2 },
-  { key: "units", labelAr: "الوحدات", labelEn: "Units", href: "/units", icon: Landmark },
-  { key: "owners", labelAr: "الملاك", labelEn: "Owners", href: "/owners", icon: Home },
-  { key: "tenants", labelAr: "المستأجرون", labelEn: "Tenants", href: "/tenants", icon: Users },
-  { key: "contracts", labelAr: "العقود", labelEn: "Contracts", href: "/contracts", icon: ClipboardList },
-  { key: "payments", labelAr: "المدفوعات", labelEn: "Payments", href: "/payments", icon: Receipt },
-  { key: "maintenance", labelAr: "الصيانة", labelEn: "Maintenance", href: "/maintenance", icon: Wrench },
-  { key: "services", labelAr: "الخدمات", labelEn: "Services", href: "/services", icon: Settings2 },
-  { key: "vendors", labelAr: "الموردون", labelEn: "Vendors", href: "/vendors", icon: Hammer },
-  { key: "users", labelAr: "المستخدمون", labelEn: "Users & Roles", href: "/users", icon: Users },
-  { key: "reports", labelAr: "التقارير", labelEn: "Reports", href: "/reports", icon: BarChart3 },
+  { key: "dashboard", labelAr: "لوحة القيادة", labelEn: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard.view" },
+  { key: "properties", labelAr: "العقارات", labelEn: "Properties", href: "/properties", icon: Building2, permission: "properties.view" },
+  { key: "units", labelAr: "الوحدات", labelEn: "Units", href: "/units", icon: Landmark, permission: "units.view" },
+  { key: "owners", labelAr: "الملاك", labelEn: "Owners", href: "/owners", icon: Home, permission: "owners.view" },
+  { key: "tenants", labelAr: "المستأجرون", labelEn: "Tenants", href: "/tenants", icon: Users, permission: "tenants.view" },
+  { key: "contracts", labelAr: "العقود", labelEn: "Contracts", href: "/contracts", icon: ClipboardList, permission: "contracts.view" },
+  { key: "payments", labelAr: "المدفوعات", labelEn: "Payments", href: "/payments", icon: Receipt, permission: "payments.view" },
+  { key: "maintenance", labelAr: "الصيانة", labelEn: "Maintenance", href: "/maintenance", icon: Wrench, permission: "maintenance.view" },
+  { key: "services", labelAr: "الخدمات", labelEn: "Services", href: "/services", icon: Settings2, permission: "services.view" },
+  { key: "vendors", labelAr: "الموردون", labelEn: "Vendors", href: "/vendors", icon: Hammer, permission: "vendors.view" },
+  { key: "users", labelAr: "المستخدمون", labelEn: "Users", href: "/users", icon: Users, permission: "users.view" },
+  { key: "roles", labelAr: "الأدوار والصلاحيات", labelEn: "Roles", href: "/roles", icon: ShieldCheck, permission: "roles.view" },
+  { key: "reports", labelAr: "التقارير", labelEn: "Reports", href: "/reports", icon: BarChart3, permission: "reports.view" },
 ];
 
 export const quickActions = [

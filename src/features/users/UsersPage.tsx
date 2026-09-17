@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Plus, ShieldCheck, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Can } from "@/app/guards/Can";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
@@ -10,6 +11,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useUserMutations, useUsersList } from "@/features/users/useUsers";
 import { normalizeApiError } from "@/api/errors";
 import { pageMotion } from "@/lib/motion";
@@ -28,6 +30,7 @@ function UserRoleBadge({ user }: { user: User }) {
 }
 
 export function UsersPage() {
+  const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const skip = Number(searchParams.get("skip") ?? 0);
@@ -81,14 +84,16 @@ export function UsersPage() {
       <PageContainer>
         <PageHeader
           actions={
-            <Button asChild className="rounded-full shadow-sm">
-              <Link to="/users/new">
-                <Plus aria-hidden="true" className="size-4" />
-                إضافة مستخدم
-              </Link>
-            </Button>
+            <Can permission="users.create">
+              <Button asChild className="rounded-full shadow-sm">
+                <Link to="/users/new">
+                  <Plus aria-hidden="true" className="size-4" />
+                  إضافة مستخدم
+                </Link>
+              </Button>
+            </Can>
           }
-          description="إدارة المستخدمين وفق حقول OpenAPI، مع أدوار مقروءة من الخادم."
+          description="إدارة المستخدمين وتعيين الأدوار المعرفة في النظام."
           eyebrow="المستخدمون والصلاحيات"
           title="المستخدمون"
         />
@@ -98,11 +103,21 @@ export function UsersPage() {
               <ShieldCheck aria-hidden="true" className="size-4" />
             </span>
             <div>
-              <p className="text-meta">الأدوار</p>
-              <p className="text-sm font-semibold text-foreground">تدار كقائمة قراءة فقط من /users/roles</p>
+              <p className="text-meta">تعيين الأدوار</p>
+              <p className="text-sm font-semibold text-foreground">يُختار الدور لكل مستخدم من الأدوار المعرفة في النظام</p>
             </div>
           </div>
-          <p className="text-sm leading-6 text-muted-foreground md:col-span-2">لا يوفر OpenAPI بحثًا أو تصفية للمستخدمين، لذلك تعرض الواجهة التصفح المدعوم فقط وتترك صلاحيات التنفيذ للخادم.</p>
+          <p className="text-sm leading-6 text-muted-foreground md:col-span-2">
+            تظهر صلاحيات كل مستخدم حسب الدور المعيّن له. يمكن إدارة الأدوار والصلاحيات من صفحة الأدوار.
+            {can("roles.view") ? (
+              <>
+                {" "}
+                <Link className="font-medium text-primary underline-offset-4 hover:underline" to="/roles">
+                  فتح الأدوار والصلاحيات
+                </Link>
+              </>
+            ) : null}
+          </p>
         </section>
         {usersQuery.isError ? (
           <ErrorState title="تعذر تحميل المستخدمين" description="تعذر تحميل قائمة المستخدمين." onRetry={() => void usersQuery.refetch()} />
@@ -112,17 +127,21 @@ export function UsersPage() {
               <DataTable
                 actions={(row) => (
                   <>
-                    <Button asChild className="rounded-full" size="sm" variant="outline">
-                      <Link to={`/users/${row.id}/edit`}>تعديل</Link>
-                    </Button>
-                    <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(row)}>
-                      حذف
-                    </Button>
+                    <Can permission="users.update">
+                      <Button asChild className="rounded-full" size="sm" variant="outline">
+                        <Link to={`/users/${row.id}/edit`}>تعديل</Link>
+                      </Button>
+                    </Can>
+                    <Can permission="users.delete">
+                      <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(row)}>
+                        حذف
+                      </Button>
+                    </Can>
                   </>
                 )}
                 columns={columns}
                 data={usersQuery.data ?? []}
-                emptyAction={<Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button>}
+                emptyAction={can("users.create") ? <Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button> : undefined}
                 emptyDescription="لا توجد حسابات مستخدمين في الصفحة الحالية."
                 emptyTitle="لا يوجد مستخدمون"
                 getRowId={(row) => row.id}
@@ -138,7 +157,7 @@ export function UsersPage() {
               {usersQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل المستخدمين...</p>
               ) : (usersQuery.data ?? []).length === 0 ? (
-                <EmptyState compact action={<Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button>} description="لا توجد حسابات مستخدمين في الصفحة الحالية." title="لا يوجد مستخدمون" />
+                <EmptyState compact action={can("users.create") ? <Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button> : undefined} description="لا توجد حسابات مستخدمين في الصفحة الحالية." title="لا يوجد مستخدمون" />
               ) : null}
               {(usersQuery.data ?? []).map((user) => (
                 <div key={user.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
@@ -152,8 +171,12 @@ export function UsersPage() {
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                     <UserRoleBadge user={user} />
                     <div className="flex gap-2">
-                      <Button asChild className="rounded-full" size="sm" variant="outline"><Link to={`/users/${user.id}/edit`}>تعديل</Link></Button>
-                      <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(user)}>حذف</Button>
+                      <Can permission="users.update">
+                        <Button asChild className="rounded-full" size="sm" variant="outline"><Link to={`/users/${user.id}/edit`}>تعديل</Link></Button>
+                      </Can>
+                      <Can permission="users.delete">
+                        <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(user)}>حذف</Button>
+                      </Can>
                     </div>
                   </div>
                 </div>
