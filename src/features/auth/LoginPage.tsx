@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { BrandLockup } from "@/components/brand/BrandLockup";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/forms/FormField";
 import { Input } from "@/components/ui/Input";
@@ -49,7 +50,7 @@ export function LoginPage() {
   return (
     <main className="min-h-dvh overflow-hidden bg-background text-foreground" dir="rtl">
       <div className="grid min-h-dvh grid-cols-1 bg-[radial-gradient(circle_at_12%_10%,hsl(var(--primary)/0.11),transparent_22rem),linear-gradient(135deg,hsl(var(--background)),#fff_46%,hsl(var(--primary-soft)/0.55))] p-4 sm:p-6 lg:grid-cols-[55fr_45fr] lg:gap-0 lg:p-7">
-        <section className="relative order-1 min-h-[300px] overflow-hidden rounded-[24px] border border-white/70 bg-navy shadow-popover lg:col-start-1 lg:min-h-0">
+        <section className="relative order-1 min-h-[300px] min-w-0 overflow-hidden rounded-[24px] border border-white/70 bg-navy shadow-popover lg:col-start-1 lg:min-h-0">
           {imageAvailable ? (
             <img
               alt="مبنى سكني عصري فاخر"
@@ -62,18 +63,20 @@ export function LoginPage() {
           )}
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgb(7_94_87_/_0.18),rgb(23_34_53_/_0.54)),linear-gradient(0deg,rgb(23_34_53_/_0.44),transparent_54%)]" />
           <div className="relative flex h-full min-h-[300px] flex-col justify-between p-5 text-white sm:p-7 lg:min-h-[calc(100dvh-3.5rem)] lg:p-9">
-            <BrandLockup className="[&_p]:text-white [&_p:last-child]:text-white/75" />
-            <div className="max-w-xl space-y-5">
+            <div className="w-fit rounded-xl border border-white/30 bg-white/92 px-3 py-2 shadow-sm backdrop-blur">
+              <BrandLogo className="w-32 sm:w-36" variant="full" />
+            </div>
+            <div className="min-w-0 max-w-xl space-y-5">
               <div className="space-y-3">
-                <p className="text-sm font-semibold text-white/80">Real Estate Platform</p>
-                <h1 className="text-3xl font-bold leading-tight text-white sm:text-4xl">إدارة عقارات أكثر ذكاءً</h1>
+                <p className="text-sm font-semibold text-white/80">SakanFlow</p>
+                <h1 className="break-words text-3xl font-bold leading-tight text-white sm:text-4xl">إدارة عقارية أذكى</h1>
                 <p className="max-w-lg text-sm leading-7 text-white/82 sm:text-base">
                   منصة متكاملة لإدارة العقارات والوحدات والعقود والمدفوعات والصيانة من مكان واحد.
                 </p>
               </div>
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
                 {benefits.map((benefit) => (
-                  <div key={benefit.label} className="flex items-center gap-2 rounded-xl border border-white/18 bg-white/12 px-3 py-2.5 backdrop-blur-md">
+                  <div key={benefit.label} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/18 bg-white/12 px-3 py-2.5 backdrop-blur-md">
                     <benefit.icon aria-hidden="true" className="size-4 shrink-0 text-white" />
                     <span className="text-xs font-semibold leading-5 text-white/90">{benefit.label}</span>
                   </div>
@@ -83,8 +86,8 @@ export function LoginPage() {
           </div>
         </section>
 
-        <section className="order-2 flex items-center justify-center px-1 py-7 sm:px-4 lg:col-start-2 lg:row-start-1 lg:px-8 lg:py-0 xl:px-12">
-          <div className="w-full max-w-[440px]">
+        <section className="order-2 flex min-w-0 items-center justify-center px-1 py-7 sm:px-4 lg:col-start-2 lg:row-start-1 lg:px-8 lg:py-0 xl:px-12">
+          <div className="min-w-0 w-full max-w-[440px]">
             <div className="mb-8 hidden lg:block">
               <BrandLockup />
             </div>

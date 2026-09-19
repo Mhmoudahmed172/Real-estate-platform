@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Can } from "@/app/guards/Can";
 import { navigationItems } from "@/app/router/routes";
 import { useAuth } from "@/features/auth/useAuth";
+import { BRAND_NAME } from "@/lib/brand";
 
 type TopbarProps = {
   onOpenSidebar: () => void;
@@ -15,7 +16,7 @@ function currentPageTitle(pathname: string) {
   const match = navigationItems
     .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
     .sort((left, right) => right.href.length - left.href.length)[0];
-  return match?.labelAr ?? "Real Estate Platform";
+  return match?.labelAr ?? BRAND_NAME;
 }
 
 export function Topbar({ onOpenSidebar }: TopbarProps) {
