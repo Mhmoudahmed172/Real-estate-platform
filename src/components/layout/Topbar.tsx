@@ -36,12 +36,12 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-header items-center gap-3 border-b border-border bg-header px-4 sm:gap-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-header items-center gap-3 border-b border-border bg-header/95 px-4 shadow-[0_1px_0_rgb(221_229_227),0_10px_28px_rgb(23_34_53_/_0.05)] backdrop-blur sm:gap-4 sm:px-6 lg:px-8">
       <Button aria-label="فتح القائمة" className="lg:hidden" size="icon" variant="ghost" onClick={onOpenSidebar}>
         <Menu aria-hidden="true" className="size-5" />
       </Button>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">{pageTitle}</p>
+        <p className="truncate text-base font-bold text-navy">{pageTitle}</p>
       </div>
       <form className="hidden min-w-0 flex-1 md:block" onSubmit={handleSearch}>
         <SearchInput
@@ -59,7 +59,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
             </Link>
           </Button>
         </Can>
-        <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-card py-1 pe-3 ps-1">
+        <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-card py-1 pe-3 ps-1 shadow-sm">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
             {initial}
           </div>

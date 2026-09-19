@@ -9,7 +9,7 @@ import { propertyTypeLabels } from "@/lib/labels";
 import type { PortfolioSegment } from "@/features/dashboard/dashboardAdapter";
 import type { PropertyOut } from "@/types/resources";
 
-const barColors = ["bg-primary", "bg-navy", "bg-warning", "bg-muted-foreground"];
+const barColors = ["bg-primary", "bg-navy", "bg-success", "bg-warning"];
 
 type DashboardPortfolioProps = {
   segments: PortfolioSegment[];
@@ -21,12 +21,12 @@ export function DashboardPortfolio({ segments, featuredProperty }: DashboardPort
 
   return (
     <motion.div className="h-full" {...fadeItem}>
-      <Card className="flex h-full flex-col">
-        <CardHeader className="pb-3">
+      <Card className="flex h-full flex-col overflow-hidden">
+        <CardHeader className="border-b border-border/70 pb-4">
           <CardTitle>توزيع المحفظة حسب النوع</CardTitle>
           <p className="text-meta">تجميع العقارات حسب النوع ونسبة الوحدات المؤجرة</p>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col justify-between gap-5">
+        <CardContent className="flex flex-1 flex-col justify-between gap-5 pt-5">
           {segments.length === 0 ? (
             <div className="space-y-5">
               {Array.from({ length: 3 }).map((_, index) => (
@@ -35,7 +35,7 @@ export function DashboardPortfolio({ segments, featuredProperty }: DashboardPort
                     <span className="h-2 w-20 rounded-full bg-muted" />
                     <span className="font-numeric text-meta">—</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted" />
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted" />
                 </div>
               ))}
               <p className="text-meta">أضف عقارات لعرض توزيع المحفظة.</p>
@@ -43,17 +43,17 @@ export function DashboardPortfolio({ segments, featuredProperty }: DashboardPort
           ) : (
             <div className="space-y-5">
               {segments.map((segment, index) => (
-                <div key={segment.type} className="space-y-2">
+                <div key={segment.type} className="space-y-2.5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className={`size-2.5 shrink-0 rounded-full ${barColors[index % barColors.length]}`} />
-                      <span className="truncate text-sm font-semibold text-foreground">{segment.label}</span>
+                      <span className="truncate text-sm font-semibold text-navy">{segment.label}</span>
                     </div>
-                    <span className="font-numeric text-sm font-bold text-foreground">
+                    <span className="font-numeric text-sm font-extrabold text-navy">
                       {segment.occupancy === null ? "—" : formatPercent(segment.occupancy)}
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-[#E7EDEA]">
                     <div
                       className={`h-full rounded-full ${barColors[index % barColors.length]}`}
                       style={{ width: `${Math.min(segment.occupancy ?? 0, 100)}%` }}
@@ -69,14 +69,14 @@ export function DashboardPortfolio({ segments, featuredProperty }: DashboardPort
           )}
           {featuredProperty ? (
             <Link
-              className="flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3.5 transition-colors duration-fast hover:bg-muted"
+              className="flex items-center gap-3 rounded-xl border border-border bg-muted/50 p-3.5 shadow-sm transition-colors duration-fast hover:bg-primary-soft/50"
               to={`/properties/${featuredProperty.id}`}
             >
-              <div className="flex size-12 items-center justify-center rounded-xl bg-primary-soft text-primary">
+              <div className="flex size-12 items-center justify-center rounded-xl bg-primary-soft text-primary ring-1 ring-primary/10">
                 <Building2 aria-hidden="true" className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground">{featuredProperty.name}</p>
+                <p className="truncate text-sm font-semibold text-navy">{featuredProperty.name}</p>
                 <p className="truncate text-meta">
                   {featuredProperty.city ?? "بدون مدينة"} · {propertyTypeLabels[featuredProperty.property_type]}
                 </p>

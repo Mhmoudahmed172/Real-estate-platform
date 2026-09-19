@@ -19,20 +19,20 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const visibleItems = navigationItems.filter((item) => can(item.permission));
 
   return (
-    <aside className="flex h-full w-sidebar flex-col border-l border-border bg-sidebar">
+    <aside className="flex h-full w-sidebar flex-col border-l border-border bg-sidebar shadow-[0_18px_45px_rgb(23_34_53_/_0.06)]">
       <div className="flex h-header items-center border-b border-border px-4">
         <BrandLockup compact />
       </div>
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="mb-2 px-3 text-[11px] font-semibold text-muted-foreground">التنقل</p>
-        <ul className="space-y-1">
+        <p className="mb-2 px-3 text-[11px] font-bold text-muted-foreground">التنقل</p>
+        <ul className="space-y-1.5">
           {visibleItems.map((item) => (
             <li key={item.key}>
               <NavLink
                 className={({ isActive }) =>
                   cn(
                     "flex h-10 items-center gap-3 rounded-[10px] px-3 text-[13px] font-medium text-sidebar-foreground transition-colors duration-fast hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    isActive && "bg-primary-soft font-semibold text-primary hover:bg-primary-soft hover:text-primary",
+                    isActive && "bg-primary-soft font-bold text-primary shadow-sm hover:bg-primary-soft hover:text-primary",
                   )
                 }
                 to={item.href}
@@ -47,7 +47,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </ul>
       </nav>
       <div className="space-y-3 border-t border-border p-4">
-        <div className="flex items-center justify-between rounded-[10px] border border-border bg-card px-3.5 py-3">
+        <div className="flex items-center justify-between rounded-[10px] border border-border bg-card px-3.5 py-3 shadow-sm">
           <div>
             <p className="text-meta">معدل الإشغال</p>
             <p className="mt-0.5 font-numeric text-sm font-semibold text-foreground">

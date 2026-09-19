@@ -6,11 +6,11 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variants = {
-  default: "border-primary/20 bg-primary/10 text-primary",
+  default: "border-primary/20 bg-primary-soft text-primary",
   success: "border-success/20 bg-success/10 text-success",
-  warning: "border-warning/25 bg-warning/15 text-warning",
+  warning: "border-warning/25 bg-secondary-soft text-[#8A5D12]",
   danger: "border-destructive/20 bg-destructive/10 text-destructive",
-  muted: "border-border bg-muted text-muted-foreground",
+  muted: "border-border bg-muted/75 text-muted-foreground",
 };
 
 export function Badge({ className, variant = "default", ...props }: BadgeProps) {

@@ -47,7 +47,7 @@ export function AppShell() {
       </AnimatePresence>
       <div className="lg:pr-sidebar">
         <Topbar onOpenSidebar={() => setSidebarOpen(true)} />
-        <main id="main-content">
+        <main id="main-content" className="bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.05),transparent_28rem)]">
           <Outlet />
         </main>
       </div>

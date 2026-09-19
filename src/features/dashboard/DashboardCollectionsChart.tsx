@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { fadeItem } from "@/lib/motion";
@@ -25,8 +25,8 @@ export function DashboardCollectionsChart({
 
   return (
     <motion.div className="h-full" {...fadeItem}>
-      <Card className="flex h-full flex-col">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+      <Card className="flex h-full flex-col overflow-hidden">
+        <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0 border-b border-border/70 pb-4">
           <div className="space-y-1">
             <CardTitle>الإيرادات والتحصيل</CardTitle>
             <p className="text-meta">التحصيل الشهري من الدفعات ذات تاريخ السداد</p>
@@ -39,7 +39,7 @@ export function DashboardCollectionsChart({
             <Badge variant="muted">YTD {year}</Badge>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-1 flex-col">
+        <CardContent className="flex flex-1 flex-col pt-5">
           <div className="relative h-[280px] w-full">
             <motion.div
               className="h-full w-full"
@@ -49,8 +49,14 @@ export function DashboardCollectionsChart({
               transition={{ duration: 0.28 }}
             >
               <ResponsiveContainer height="100%" width="100%">
-                <BarChart data={points} barSize={22} barGap={8}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
+                <AreaChart data={points} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="collectionsGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="#087F73" stopOpacity={0.28} />
+                      <stop offset="100%" stopColor="#087F73" stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="4 7" vertical={false} />
                   <XAxis axisLine={false} dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
                   <YAxis
                     axisLine={false}
@@ -61,46 +67,54 @@ export function DashboardCollectionsChart({
                   />
                   {showChart ? (
                     <Tooltip
-                      cursor={{ fill: "hsl(var(--primary) / 0.06)" }}
+                      cursor={{ stroke: "#087F73", strokeOpacity: 0.18, strokeWidth: 2 }}
                       contentStyle={{
-                        borderRadius: 12,
+                        borderRadius: 14,
                         border: "1px solid hsl(var(--border))",
                         background: "hsl(var(--card))",
-                        boxShadow: "var(--shadow-card)",
+                        boxShadow: "var(--shadow-popover)",
                         color: "hsl(var(--foreground))",
                         fontSize: 12,
                       }}
                       formatter={(value) => [formatCurrency(Number(value ?? 0)), "المحصل"]}
                     />
                   ) : null}
-                  <Bar dataKey="collected" fill="hsl(var(--primary))" name="المحصل" radius={[6, 6, 0, 0]} />
-                </BarChart>
+                  <Area
+                    activeDot={{ r: 5, stroke: "#FFFFFF", strokeWidth: 2 }}
+                    dataKey="collected"
+                    fill="url(#collectionsGradient)"
+                    name="المحصل"
+                    stroke="#087F73"
+                    strokeWidth={3}
+                    type="monotone"
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             </motion.div>
             {showChart ? null : (
-              <div className="absolute inset-0 flex items-center justify-center bg-card/55">
-                <p className="rounded-full bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
+              <div className="absolute inset-0 flex items-center justify-center bg-card/65 backdrop-blur-[1px]">
+                <p className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground shadow-sm">
                   لا تتوفر سلسلة تحصيل شهرية بعد
                 </p>
               </div>
             )}
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
-            <div>
+          <div className="mt-5 grid grid-cols-1 gap-3 border-t border-border pt-4 sm:grid-cols-3">
+            <div className="rounded-xl bg-muted/50 px-3 py-2.5">
               <p className="text-meta">المحصل YTD</p>
-              <p className="mt-1 font-numeric text-sm font-bold text-foreground">
+              <p className="mt-1 font-numeric text-sm font-bold text-navy">
                 {collectedYtd === null ? "—" : formatCurrency(collectedYtd)}
               </p>
             </div>
-            <div>
+            <div className="rounded-xl bg-muted/50 px-3 py-2.5">
               <p className="text-meta">معدل الإشغال</p>
-              <p className="mt-1 font-numeric text-sm font-bold text-foreground">
+              <p className="mt-1 font-numeric text-sm font-bold text-navy">
                 {occupancyPercent === null ? "—" : formatPercent(occupancyPercent)}
               </p>
             </div>
-            <div>
+            <div className="rounded-xl bg-muted/50 px-3 py-2.5">
               <p className="text-meta">حالة السلسلة</p>
-              <p className="mt-1 text-sm font-semibold text-foreground">{showChart ? "متصلة" : "بانتظار الدفعات"}</p>
+              <p className="mt-1 text-sm font-semibold text-navy">{showChart ? "متصلة" : "بانتظار الدفعات"}</p>
             </div>
           </div>
         </CardContent>

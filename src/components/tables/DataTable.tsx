@@ -51,13 +51,13 @@ export function DataTable<T>({
     <DataTableShell>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
-          <thead className="bg-muted/40">
+          <thead className="bg-muted/65">
             <tr className="border-b border-border text-muted-foreground">
               {columns.map((column) => (
                 <th
                   key={column.id}
                   className={cn(
-                    "px-4 py-3 text-start text-[11px] font-semibold first:pe-5 last:ps-5",
+                    "px-4 py-3 text-start text-[11px] font-bold first:pe-5 last:ps-5",
                     column.numeric && "font-numeric tabular-nums",
                     column.className,
                   )}
@@ -95,8 +95,8 @@ export function DataTable<T>({
                 <tr
                   key={getRowId(row)}
                   className={cn(
-                    "border-b border-border/70 last:border-0 focus-within:bg-muted/60",
-                    onRowClick && "cursor-pointer transition-colors duration-fast hover:bg-muted/70",
+                    "border-b border-border/75 last:border-0 focus-within:bg-primary-soft/45",
+                    onRowClick && "cursor-pointer transition-colors duration-fast hover:bg-primary-soft/35",
                   )}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
@@ -126,7 +126,7 @@ export function DataTable<T>({
         </table>
       </div>
       {onNextPage || onPreviousPage ? (
-        <div className="flex flex-col gap-3 border-t border-border bg-muted/35 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-border bg-muted/50 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-meta">تصفح النتائج حسب حد القائمة</p>
           <div className="flex items-center gap-2">
             <Button className="rounded-full" disabled={!hasPrevious || loading} size="sm" variant="outline" onClick={onPreviousPage}>
