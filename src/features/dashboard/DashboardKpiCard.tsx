@@ -49,8 +49,8 @@ export function DashboardKpiCard({ kpi, icon: Icon }: DashboardKpiCardProps) {
   return (
     <motion.div {...fadeItem} {...cardHover}>
       <Card className="group relative flex h-full min-h-[184px] flex-col overflow-hidden transition-[border-color,box-shadow] hover:border-primary/20 hover:shadow-card-hover">
-        <span className={cn("absolute right-5 top-0 h-1 w-12 rounded-b-full", accent.accent)} />
-        <CardContent className="flex min-h-0 flex-1 flex-col px-5 pb-4 pt-5">
+        <span className={cn("absolute inset-x-0 top-0 h-[3px]", accent.accent)} />
+        <CardContent className="flex min-h-0 flex-1 flex-col px-5 pb-0 pt-5 sm:px-5 sm:pb-0 sm:pt-5">
           <div className="flex min-h-12 items-start justify-between gap-3">
             <p className="min-w-0 flex-1 pt-0.5 text-[13px] font-semibold leading-5 text-muted-foreground">
               {kpi.label}
@@ -74,7 +74,7 @@ export function DashboardKpiCard({ kpi, icon: Icon }: DashboardKpiCardProps) {
               {kpi.value === null ? "—" : <AnimatedNumber format={formatValue} value={kpi.value} />}
             </p>
           </div>
-          <div className="mt-auto flex min-h-8 flex-nowrap items-center gap-x-2 overflow-hidden border-t border-border/80 pt-3">
+          <div className="-mx-5 mt-auto flex min-h-[45px] flex-nowrap items-center gap-x-2 overflow-hidden border-t border-border/70 bg-muted/45 px-5 py-3">
             {kpi.footer.slice(0, 2).map((item) => (
               <span key={item.label} className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-5 text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", footerToneVariants[item.tone])} />
