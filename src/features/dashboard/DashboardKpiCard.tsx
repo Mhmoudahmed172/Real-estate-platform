@@ -48,21 +48,13 @@ export function DashboardKpiCard({ kpi, icon: Icon }: DashboardKpiCardProps) {
 
   return (
     <motion.div {...fadeItem} {...cardHover}>
-      <Card className="group relative h-full min-h-[184px] overflow-hidden transition-[border-color,box-shadow] hover:border-primary/20 hover:shadow-card-hover">
+      <Card className="group relative flex h-full min-h-[184px] flex-col overflow-hidden transition-[border-color,box-shadow] hover:border-primary/20 hover:shadow-card-hover">
         <span className={cn("absolute right-5 top-0 h-1 w-12 rounded-b-full", accent.accent)} />
-        <CardContent className="flex h-full flex-col gap-4 px-5 pb-4 pt-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 pt-0.5">
-              <p className="text-[13px] font-semibold leading-5 text-muted-foreground">{kpi.label}</p>
-              <p
-                className={cn(
-                  "mt-3 whitespace-nowrap font-numeric text-[2rem] font-bold leading-none text-navy lg:text-[2.125rem]",
-                  kpi.value === null && "text-muted-foreground",
-                )}
-              >
-                {kpi.value === null ? "—" : <AnimatedNumber format={formatValue} value={kpi.value} />}
-              </p>
-            </div>
+        <CardContent className="flex min-h-0 flex-1 flex-col px-5 pb-4 pt-5">
+          <div className="flex min-h-12 items-start justify-between gap-3">
+            <p className="min-w-0 flex-1 pt-0.5 text-[13px] font-semibold leading-5 text-muted-foreground">
+              {kpi.label}
+            </p>
             <span
               className={cn(
                 "flex size-12 shrink-0 items-center justify-center rounded-2xl ring-1 transition-colors duration-base",
@@ -72,15 +64,25 @@ export function DashboardKpiCard({ kpi, icon: Icon }: DashboardKpiCardProps) {
               <Icon aria-hidden="true" className="size-[22px]" strokeWidth={1.9} />
             </span>
           </div>
-          <div className="mt-auto flex min-h-8 flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/80 pt-3">
+          <div className="flex min-h-14 flex-1 items-center py-2">
+            <p
+              className={cn(
+                "whitespace-nowrap font-numeric text-[2rem] font-bold leading-none text-navy lg:text-[2.125rem]",
+                kpi.value === null && "text-muted-foreground",
+              )}
+            >
+              {kpi.value === null ? "—" : <AnimatedNumber format={formatValue} value={kpi.value} />}
+            </p>
+          </div>
+          <div className="mt-auto flex min-h-8 flex-nowrap items-center gap-x-2 overflow-hidden border-t border-border/80 pt-3">
             {kpi.footer.slice(0, 2).map((item) => (
               <span key={item.label} className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-5 text-muted-foreground">
                 <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", footerToneVariants[item.tone])} />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate" title={item.label}>{item.label}</span>
               </span>
             ))}
             {!kpi.mapped ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
                 <span aria-hidden="true" className="size-1.5 rounded-full bg-muted-foreground/45" />
                 غير متاح
               </span>
