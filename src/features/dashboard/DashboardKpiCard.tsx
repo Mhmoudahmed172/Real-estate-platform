@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { cardHover, fadeItem } from "@/lib/motion";
@@ -8,29 +7,29 @@ import { formatCurrency, formatNumber, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { DashboardKpi } from "@/features/dashboard/dashboardAdapter";
 
-const toneVariants = {
-  muted: "muted",
-  success: "success",
-  danger: "danger",
-  warning: "warning",
+const footerToneVariants = {
+  muted: "bg-muted-foreground/45",
+  success: "bg-success",
+  danger: "bg-destructive",
+  warning: "bg-warning",
 } as const;
 
 const accentVariants = {
   properties: {
     icon: "bg-primary-soft text-primary ring-primary/15",
-    bar: "bg-primary",
+    accent: "bg-primary",
   },
   occupancy: {
     icon: "bg-success/10 text-success ring-success/15",
-    bar: "bg-success",
+    accent: "bg-success",
   },
   "rented-units": {
     icon: "bg-navy/10 text-navy ring-navy/15",
-    bar: "bg-navy",
+    accent: "bg-navy",
   },
   collected: {
     icon: "bg-secondary-soft text-[#8A5D12] ring-warning/20",
-    bar: "bg-warning",
+    accent: "bg-warning",
   },
 } as const;
 
@@ -49,28 +48,42 @@ export function DashboardKpiCard({ kpi, icon: Icon }: DashboardKpiCardProps) {
 
   return (
     <motion.div {...fadeItem} {...cardHover}>
-      <Card className="relative h-full overflow-hidden hover:shadow-card-hover">
-        <span className={cn("absolute inset-x-0 top-0 h-1", accent.bar)} />
-        <CardContent className="flex h-full flex-col gap-4 px-5 py-5">
+      <Card className="group relative h-full min-h-[184px] overflow-hidden transition-[border-color,box-shadow] hover:border-primary/20 hover:shadow-card-hover">
+        <span className={cn("absolute right-5 top-0 h-1 w-12 rounded-b-full", accent.accent)} />
+        <CardContent className="flex h-full flex-col gap-4 px-5 pb-4 pt-5">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-sm font-semibold text-muted-foreground">{kpi.label}</p>
-            <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-[12px] ring-1", accent.icon)}>
-              <Icon aria-hidden="true" className="size-[18px]" />
+            <div className="min-w-0 flex-1 pt-0.5">
+              <p className="text-[13px] font-semibold leading-5 text-muted-foreground">{kpi.label}</p>
+              <p
+                className={cn(
+                  "mt-3 whitespace-nowrap font-numeric text-[2rem] font-bold leading-none text-navy lg:text-[2.125rem]",
+                  kpi.value === null && "text-muted-foreground",
+                )}
+              >
+                {kpi.value === null ? "—" : <AnimatedNumber format={formatValue} value={kpi.value} />}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "flex size-12 shrink-0 items-center justify-center rounded-2xl ring-1 transition-colors duration-base",
+                accent.icon,
+              )}
+            >
+              <Icon aria-hidden="true" className="size-[22px]" strokeWidth={1.9} />
             </span>
           </div>
-          <p className={cn("font-numeric text-kpi text-navy", kpi.value === null && "text-muted-foreground")}>
-            {kpi.value === null ? "—" : <AnimatedNumber format={formatValue} value={kpi.value} />}
-          </p>
-          <div className="mt-auto flex min-h-6 flex-wrap items-center gap-1.5">
+          <div className="mt-auto flex min-h-8 flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-border/80 pt-3">
             {kpi.footer.slice(0, 2).map((item) => (
-              <Badge key={item.label} className="min-h-6 px-2 text-[10.5px]" variant={toneVariants[item.tone]}>
-                {item.label}
-              </Badge>
+              <span key={item.label} className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-5 text-muted-foreground">
+                <span aria-hidden="true" className={cn("size-1.5 shrink-0 rounded-full", footerToneVariants[item.tone])} />
+                <span className="truncate">{item.label}</span>
+              </span>
             ))}
             {!kpi.mapped ? (
-              <Badge className="min-h-6 px-2 text-[10.5px]" variant="muted">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-muted-foreground/45" />
                 غير متاح
-              </Badge>
+              </span>
             ) : null}
           </div>
         </CardContent>
