@@ -20,7 +20,7 @@ export function DashboardExpiringContracts({ rows }: DashboardExpiringContractsP
       <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
           <div className="flex items-start gap-3">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-secondary-soft text-secondary">
+            <span className="flex size-9 items-center justify-center rounded-[10px] bg-primary-soft text-primary">
               <CalendarClock aria-hidden="true" className="size-4" />
             </span>
             <div>

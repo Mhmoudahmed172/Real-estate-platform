@@ -19,7 +19,7 @@ export function DashboardOpenMaintenance({ rows }: DashboardOpenMaintenanceProps
       <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
           <div className="flex items-start gap-3">
-            <span className="flex size-10 items-center justify-center rounded-2xl bg-tertiary-soft text-tertiary">
+            <span className="flex size-9 items-center justify-center rounded-[10px] bg-muted text-navy">
               <Wrench aria-hidden="true" className="size-4" />
             </span>
             <div>
@@ -40,7 +40,7 @@ export function DashboardOpenMaintenance({ rows }: DashboardOpenMaintenanceProps
           ) : (
             rows.map((row) => (
               <div key={row.request.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-3">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-card text-tertiary shadow-sm">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-card text-navy shadow-sm">
                   <Wrench aria-hidden="true" className="size-4" />
                 </span>
                 <div className="min-w-0 flex-1">

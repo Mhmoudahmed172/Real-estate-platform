@@ -23,8 +23,8 @@ const propertyVariants: Record<PropertyStatus, "success" | "warning" | "muted"> 
 };
 
 const unitVariants: Record<UnitStatus, "success" | "default" | "warning" | "muted"> = {
-  Available: "success",
-  Rented: "default",
+  Available: "default",
+  Rented: "success",
   Reserved: "warning",
   UnderMaintenance: "muted",
 };
@@ -38,7 +38,7 @@ const contractVariants: Record<ContractStatus, "success" | "muted" | "default" |
 };
 
 const paymentVariants: Record<PaymentStatus, "success" | "warning" | "danger" | "muted"> = {
-  Pending: "muted",
+  Pending: "warning",
   Paid: "success",
   Partial: "warning",
   Overdue: "danger",

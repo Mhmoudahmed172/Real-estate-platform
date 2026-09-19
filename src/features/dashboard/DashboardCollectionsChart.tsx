@@ -28,8 +28,8 @@ export function DashboardCollectionsChart({
       <Card className="flex h-full flex-col">
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <div className="space-y-1">
-            <CardTitle>مؤشر الإيرادات والتحصيل السنوي</CardTitle>
-            <p className="text-meta">مقارنة التحصيل الشهري من الدفعات ذات تاريخ السداد</p>
+            <CardTitle>الإيرادات والتحصيل</CardTitle>
+            <p className="text-meta">التحصيل الشهري من الدفعات ذات تاريخ السداد</p>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden items-center gap-1.5 text-meta sm:flex">
@@ -50,7 +50,7 @@ export function DashboardCollectionsChart({
             >
               <ResponsiveContainer height="100%" width="100%">
                 <BarChart data={points} barSize={22} barGap={8}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="4 6" vertical={false} />
+                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 6" vertical={false} />
                   <XAxis axisLine={false} dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} />
                   <YAxis
                     axisLine={false}
@@ -61,11 +61,19 @@ export function DashboardCollectionsChart({
                   />
                   {showChart ? (
                     <Tooltip
-                      contentStyle={{ borderRadius: 12, borderColor: "hsl(var(--border))" }}
+                      cursor={{ fill: "hsl(var(--primary) / 0.06)" }}
+                      contentStyle={{
+                        borderRadius: 12,
+                        border: "1px solid hsl(var(--border))",
+                        background: "hsl(var(--card))",
+                        boxShadow: "var(--shadow-card)",
+                        color: "hsl(var(--foreground))",
+                        fontSize: 12,
+                      }}
                       formatter={(value) => [formatCurrency(Number(value ?? 0)), "المحصل"]}
                     />
                   ) : null}
-                  <Bar dataKey="collected" fill="hsl(var(--primary))" name="المحصل" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="collected" fill="hsl(var(--primary))" name="المحصل" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>

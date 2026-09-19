@@ -36,7 +36,7 @@ export function DashboardSkeleton() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <Card key={index}>
-            <CardContent className="flex min-h-[156px] flex-col justify-between pt-6">
+            <CardContent className="flex min-h-[132px] flex-col justify-between pt-6">
               <div className="flex items-start justify-between">
                 <div className="space-y-3">
                   <Skeleton className="h-3.5 w-24" />

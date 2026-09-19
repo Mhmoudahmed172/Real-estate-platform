@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
   <section
     className={cn(
-      "rounded-xl border border-border/80 bg-card text-card-foreground shadow-card transition-shadow duration-base",
+      "rounded-[14px] border border-border bg-card text-card-foreground shadow-card transition-shadow duration-base",
       className,
     )}
     ref={ref}

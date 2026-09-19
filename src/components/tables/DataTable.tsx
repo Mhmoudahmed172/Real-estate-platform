@@ -51,13 +51,13 @@ export function DataTable<T>({
     <DataTableShell>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-sm">
-          <thead className="bg-muted/60">
+          <thead className="bg-muted/40">
             <tr className="border-b border-border text-muted-foreground">
               {columns.map((column) => (
                 <th
                   key={column.id}
                   className={cn(
-                    "px-4 py-3 text-start text-[11px] font-semibold uppercase tracking-[0.08em] first:pe-5 last:ps-5",
+                    "px-4 py-3 text-start text-[11px] font-semibold first:pe-5 last:ps-5",
                     column.numeric && "font-numeric tabular-nums",
                     column.className,
                   )}
@@ -95,8 +95,8 @@ export function DataTable<T>({
                 <tr
                   key={getRowId(row)}
                   className={cn(
-                    "border-b border-border/70 last:border-0 focus-within:bg-primary/[0.035]",
-                    onRowClick && "cursor-pointer transition-colors duration-fast hover:bg-primary/[0.035]",
+                    "border-b border-border/70 last:border-0 focus-within:bg-muted/60",
+                    onRowClick && "cursor-pointer transition-colors duration-fast hover:bg-muted/70",
                   )}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >

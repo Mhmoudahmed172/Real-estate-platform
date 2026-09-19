@@ -1,22 +1,32 @@
-import { Globe2, Menu, Plus } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { SearchInput } from "@/components/forms/SearchInput";
 import { Button } from "@/components/ui/Button";
 import { Can } from "@/app/guards/Can";
+import { navigationItems } from "@/app/router/routes";
 import { useAuth } from "@/features/auth/useAuth";
 
 type TopbarProps = {
   onOpenSidebar: () => void;
 };
 
+function currentPageTitle(pathname: string) {
+  const match = navigationItems
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((left, right) => right.href.length - left.href.length)[0];
+  return match?.labelAr ?? "Real Estate Platform";
+}
+
 export function Topbar({ onOpenSidebar }: TopbarProps) {
   const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const displayName = user?.full_name ?? user?.email ?? "المستخدم";
   const roleLabel = user?.role?.name ?? (user?.is_superuser ? "superuser" : "حساب");
   const initial = displayName.trim().slice(0, 1) || "م";
+  const pageTitle = currentPageTitle(location.pathname);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,36 +36,34 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-header items-center gap-4 border-b border-border/80 bg-header/95 px-4 backdrop-blur-sm sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-header items-center gap-3 border-b border-border bg-header px-4 sm:gap-4 sm:px-6 lg:px-8">
       <Button aria-label="فتح القائمة" className="lg:hidden" size="icon" variant="ghost" onClick={onOpenSidebar}>
         <Menu aria-hidden="true" className="size-5" />
       </Button>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-foreground">{pageTitle}</p>
+      </div>
       <form className="hidden min-w-0 flex-1 md:block" onSubmit={handleSearch}>
         <SearchInput
-          className="max-w-2xl"
+          className="mx-auto max-w-xl"
           placeholder="ابحث عن عقار، وحدة، عقد، أو مستأجر..."
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
       </form>
-      <div className="ms-auto flex shrink-0 items-center gap-2.5">
-        <div className="hidden h-10 items-center rounded-full border border-border bg-muted/80 p-1 lg:inline-flex" title="واجهة عربية ثابتة">
-          <Globe2 aria-hidden="true" className="ms-1.5 size-3.5 text-muted-foreground" />
-          <span className="rounded-full bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-sm">العربية</span>
-          <span className="px-2.5 py-1 text-[11px] font-medium text-muted-foreground">EN</span>
-        </div>
+      <div className="ms-auto flex shrink-0 items-center gap-2">
         <Can permission="properties.create">
-          <Button aria-label="إضافة عقار" asChild className="rounded-full shadow-sm" size="icon">
+          <Button aria-label="إضافة عقار" asChild size="icon" variant="outline">
             <Link to="/properties/new">
               <Plus aria-hidden="true" className="size-4" />
             </Link>
           </Button>
         </Can>
-        <div className="flex min-w-0 items-center gap-2.5 rounded-full bg-muted/70 py-1 pe-3 ps-1">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+        <div className="flex min-w-0 items-center gap-2 rounded-full border border-border bg-card py-1 pe-3 ps-1">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary">
             {initial}
           </div>
-          <div className="hidden min-w-0 max-w-[11rem] lg:max-w-[14rem] sm:block">
+          <div className="hidden min-w-0 max-w-[11rem] sm:block lg:max-w-[14rem]">
             <p className="truncate text-sm font-semibold leading-5 text-foreground" title={displayName}>
               {displayName}
             </p>
@@ -68,5 +76,3 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
     </header>
   );
 }
-
-

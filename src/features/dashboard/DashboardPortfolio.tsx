@@ -9,7 +9,7 @@ import { propertyTypeLabels } from "@/lib/labels";
 import type { PortfolioSegment } from "@/features/dashboard/dashboardAdapter";
 import type { PropertyOut } from "@/types/resources";
 
-const barColors = ["bg-primary", "bg-tertiary", "bg-secondary", "bg-muted-foreground"];
+const barColors = ["bg-primary", "bg-navy", "bg-warning", "bg-muted-foreground"];
 
 type DashboardPortfolioProps = {
   segments: PortfolioSegment[];

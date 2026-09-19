@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Button } from "@/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { FormField } from "@/components/forms/FormField";
 import { Input } from "@/components/ui/Input";
 import { normalizeApiError } from "@/api/errors";
@@ -41,11 +41,8 @@ export function LoginPage() {
     <main className="flex min-h-dvh items-center justify-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <div className="mb-4 flex size-14 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Building2 aria-hidden="true" className="size-7" />
-          </div>
-          <CardTitle>Phoenix Property Manager</CardTitle>
-          <p className="text-sm text-muted-foreground">تسجيل الدخول إلى نظام إدارة العقارات</p>
+          <BrandLockup align="center" className="mb-2" />
+          <p className="text-sm text-muted-foreground">تسجيل الدخول إلى حسابك</p>
         </CardHeader>
         <CardContent>
           <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}>
