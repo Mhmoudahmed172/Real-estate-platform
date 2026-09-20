@@ -8,18 +8,18 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Pagination } from "@/components/tables/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { UnitStatusBadge } from "@/components/ui/StatusBadge";
 import { useAuthorization } from "@/features/auth/useAuthorization";
-import { usePropertiesOptions, useUnitsList } from "@/features/units/useUnits";
+import { usePropertiesOptions, useUnitsPage } from "@/features/units/useUnits";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { unitStatusLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
 import { unitStatuses, type UnitOut, type UnitStatus } from "@/types/resources";
-
-const PAGE_SIZE = 20;
 
 export function UnitsPage() {
   const { can } = useAuthorization();
@@ -29,7 +29,7 @@ export function UnitsPage() {
   const query = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") as UnitStatus | null) ?? null;
   const propertyId = searchParams.get("property_id") ? Number(searchParams.get("property_id")) : null;
-  const skip = Number(searchParams.get("skip") ?? 0);
+  const pagination = readPageParams(searchParams);
   const propertiesQuery = usePropertiesOptions();
 
   const params = useMemo(
@@ -38,15 +38,23 @@ export function UnitsPage() {
       status_filter: status,
       unit_type: unitType || undefined,
       property_id: propertyId,
-      skip,
-      limit: PAGE_SIZE,
+      ...pagination,
     }),
-    [propertyId, query, skip, status, unitType],
+    [pagination.page, pagination.page_size, propertyId, query, status, unitType],
   );
 
-  const listQuery = useUnitsList(params);
+  const listQuery = useUnitsPage(params);
+  const pageData = listQuery.data;
+  const paginationProps = pageData ? {
+    page: pageData.page,
+    pageSize: pageData.page_size,
+    total: pageData.total,
+    totalPages: pageData.total_pages,
+    onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
+    onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
+  } : undefined;
   const propertyNames = useMemo(
-    () => new Map((propertiesQuery.data ?? []).map((property) => [property.id, property.name])),
+    () => new Map((propertiesQuery.data ?? []).map((property) => [property.id, property.label])),
     [propertiesQuery.data],
   );
 
@@ -57,7 +65,7 @@ export function UnitsPage() {
       else resolved.delete(key);
     });
     if (next.q !== undefined || next.unit_type !== undefined || next.status !== undefined || next.property_id !== undefined) {
-      resolved.delete("skip");
+      resolved.delete("page");
     }
     setSearchParams(resolved);
   }
@@ -143,7 +151,7 @@ export function UnitsPage() {
                 <SelectItem value="all">كل العقارات</SelectItem>
                 {(propertiesQuery.data ?? []).map((property) => (
                   <SelectItem key={property.id} value={String(property.id)}>
-                    {property.name}
+                    {property.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -199,7 +207,7 @@ export function UnitsPage() {
                   </>
                 )}
                 columns={columns}
-                data={listQuery.data ?? []}
+                data={pageData?.items ?? []}
                 emptyAction={
                   can("units.create") ? (
                     <Button asChild size="sm">
@@ -210,18 +218,16 @@ export function UnitsPage() {
                 emptyDescription="لا توجد وحدات مطابقة لعوامل التصفية الحالية."
                 emptyTitle="لا توجد وحدات"
                 getRowId={(row) => row.id}
-                hasMore={(listQuery.data?.length ?? 0) === PAGE_SIZE}
-                hasPrevious={skip > 0}
                 loading={listQuery.isPending}
-                onNextPage={() => updateParams({ skip: String(skip + PAGE_SIZE) })}
-                onPreviousPage={() => updateParams({ skip: skip <= PAGE_SIZE ? null : String(skip - PAGE_SIZE) })}
+                pagination={paginationProps}
+                updating={listQuery.isFetching && !listQuery.isPending}
                 onRowClick={(row) => navigate(`/units/${row.id}`)}
               />
             </div>
             <div className="grid gap-2 md:hidden">
               {listQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل الوحدات...</p>
-              ) : (listQuery.data ?? []).length === 0 ? (
+              ) : (pageData?.items ?? []).length === 0 ? (
                 <EmptyState
                   compact
                   action={
@@ -235,7 +241,7 @@ export function UnitsPage() {
                   title="لا توجد وحدات"
                 />
               ) : null}
-              {(listQuery.data ?? []).map((unit) => (
+              {(pageData?.items ?? []).map((unit) => (
                 <Link
                   key={unit.id}
                   className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover"
@@ -258,6 +264,7 @@ export function UnitsPage() {
                   <p className="mt-2 text-meta">{formatCurrency(unit.rent_value)}</p>
                 </Link>
               ))}
+              {paginationProps ? <Pagination {...paginationProps} isFetching={listQuery.isFetching && !listQuery.isPending} /> : null}
             </div>
           </>
         )}

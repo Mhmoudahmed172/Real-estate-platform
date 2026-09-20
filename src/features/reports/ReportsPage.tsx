@@ -1,24 +1,25 @@
 import { motion } from "framer-motion";
-import { BarChart3, Download, FileBarChart, Filter } from "lucide-react";
-import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Download, Filter, RotateCcw } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
+import { propertiesApi } from "@/api/properties.api";
 import { Can } from "@/app/guards/Can";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
-import { FilterToolbar } from "@/components/layout/FilterToolbar";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
-import { usePropertiesList } from "@/features/properties/useProperties";
 import { useReport, useReportExport } from "@/features/reports/useReports";
 import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
+import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import type { UnknownRecord } from "@/types/api";
 import type { ReportKind, ReportParams } from "@/types/domain";
@@ -26,10 +27,50 @@ import type { ReportKind, ReportParams } from "@/types/domain";
 const reportKinds = ["collections", "outstanding", "contract-expiries", "maintenance-costs"] as const satisfies readonly ReportKind[];
 
 const reportLabels: Record<ReportKind, { title: string; description: string }> = {
-  collections: { title: "التحصيلات", description: "تقرير التحصيلات ضمن الفترة المحددة." },
-  outstanding: { title: "المبالغ القائمة", description: "تقرير الذمم والمدفوعات غير المسددة." },
-  "contract-expiries": { title: "انتهاء العقود", description: "العقود التي تنتهي ضمن الفترة المحددة." },
-  "maintenance-costs": { title: "تكاليف الصيانة", description: "تكاليف الصيانة حسب معايير التقرير." },
+  collections: { title: "التحصيل", description: "الدفعات المحصلة ضمن الفترة المحددة" },
+  outstanding: { title: "المتأخرات", description: "المبالغ المستحقة وغير المسددة" },
+  "contract-expiries": { title: "انتهاء العقود", description: "العقود التي تقترب من تاريخ الانتهاء" },
+  "maintenance-costs": { title: "تكاليف الصيانة", description: "تكاليف أعمال الصيانة المنفذة" },
+};
+
+const fieldLabels: Record<string, string> = {
+  payment_count: "عدد الدفعات",
+  total_collected: "إجمالي المحصل",
+  total_due: "إجمالي المستحق",
+  total_paid: "إجمالي المدفوع",
+  total_outstanding: "المتبقي",
+  total_discount: "إجمالي الخصومات",
+  total_penalty: "إجمالي الغرامات",
+  contract_count: "عدد العقود",
+  total_rent_value: "إجمالي قيمة الإيجار",
+  request_count: "عدد الطلبات",
+  total_cost: "إجمالي التكلفة",
+  payment_id: "الدفعة",
+  contract_id: "العقد",
+  property_id: "العقار",
+  unit_id: "الوحدة",
+  tenant_id: "المستأجر",
+  owner_id: "المالك",
+  vendor_id: "المورد",
+  due_date: "تاريخ الاستحقاق",
+  paid_date: "تاريخ الدفع",
+  amount_due: "المستحق",
+  amount_paid: "المدفوع",
+  discount: "الخصم",
+  penalty: "الغرامة",
+  balance: "المتبقي",
+  status: "الحالة",
+  receipt_number: "رقم الإيصال",
+  start_date: "بداية العقد",
+  end_date: "نهاية العقد",
+  rent_value: "قيمة الإيجار",
+  deposit_amount: "التأمين",
+  payment_frequency: "دورية الدفع",
+  request_id: "الطلب",
+  issue_type: "نوع العطل",
+  priority: "الأولوية",
+  cost: "التكلفة",
+  execution_date: "تاريخ التنفيذ",
 };
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
@@ -43,31 +84,28 @@ function isRecord(value: unknown): value is Record<string, JsonValue> {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
-function valueLabel(value: JsonValue): string {
+function valueLabel(key: string, value: JsonValue): string {
   if (value === null) return "—";
   if (typeof value === "boolean") return value ? "نعم" : "لا";
   if (typeof value === "number") return formatNumber(value, Number.isInteger(value) ? 0 : 2);
   if (typeof value === "string") {
     if (/^\d{4}-\d{2}-\d{2}/.test(value)) return formatDate(value);
-    if (/^-?\d+(\.\d+)?$/.test(value) && /(amount|cost|rent|paid|due|balance|total)/i.test(value)) return formatCurrency(Number(value));
+    if (/^-?\d+(\.\d+)?$/.test(value) && /(amount|cost|rent|paid|due|balance|total)/i.test(key)) {
+      return formatCurrency(Number(value));
+    }
     return value;
   }
-  if (Array.isArray(value)) return value.length ? `${formatNumber(value.length)} عناصر` : "—";
-  return "بيانات مركبة";
+  return Array.isArray(value) ? `${formatNumber(value.length)} عناصر` : "بيانات مركبة";
 }
 
-function normalizeRows(data: UnknownRecord | undefined): FlatRow[] {
-  if (!data) return [];
-  const candidates = [data.rows, data.items, data.results, data.data, data.records, data.payments, data.contracts, data.maintenance];
-  const arrayCandidate = candidates.find(Array.isArray);
-  if (arrayCandidate) return arrayCandidate.filter(isRecord);
-  if (Array.isArray(data)) return data.filter(isRecord);
-  return [];
+function reportRows(data: UnknownRecord | undefined): FlatRow[] {
+  const rows = data?.rows;
+  return Array.isArray(rows) ? rows.filter(isRecord) : [];
 }
 
 function summaryEntries(data: UnknownRecord | undefined): Array<[string, JsonValue]> {
-  if (!data) return [];
-  return Object.entries(data).filter(([, value]) => !Array.isArray(value) && (value === null || ["string", "number", "boolean"].includes(typeof value))) as Array<[string, JsonValue]>;
+  const summary = data?.summary;
+  return isRecord(summary) ? Object.entries(summary).slice(0, 4) : [];
 }
 
 function downloadBlob(blob: Blob, filename: string) {
@@ -89,19 +127,35 @@ export function ReportsPage() {
   const dateFrom = searchParams.get("date_from") ?? "";
   const dateTo = searchParams.get("date_to") ?? "";
   const propertyId = searchParams.get("property_id") ?? "";
+  const pagination = readPageParams(searchParams);
+  const [draft, setDraft] = useState({ dateFrom, dateTo, propertyId });
 
-  const params: ReportParams = useMemo(() => ({
+  const reportParams: ReportParams = useMemo(() => ({
+    date_from: dateFrom || null,
+    date_to: dateTo || null,
+    property_id: propertyId ? Number(propertyId) : null,
+    ...pagination,
+  }), [dateFrom, dateTo, pagination.page, pagination.page_size, propertyId]);
+  const exportParams: ReportParams = useMemo(() => ({
     date_from: dateFrom || null,
     date_to: dateTo || null,
     property_id: propertyId ? Number(propertyId) : null,
   }), [dateFrom, dateTo, propertyId]);
 
-  const reportQuery = useReport(kind, params);
+  const reportQuery = useReport(kind, reportParams);
   const exportMutation = useReportExport();
-  const propertiesQuery = usePropertiesList({ skip: 0, limit: 100 });
-  const rows = normalizeRows(reportQuery.data);
+  const propertiesQuery = useQuery({
+    queryKey: [...queryKeys.properties.all, "options"],
+    queryFn: () => propertiesApi.options({ limit: 50 }),
+  });
+  const rows = reportRows(reportQuery.data);
   const summary = summaryEntries(reportQuery.data);
   const rowKeys = Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).slice(0, 8);
+  const total = Number(reportQuery.data?.total ?? 0);
+  const page = Number(reportQuery.data?.page ?? pagination.page);
+  const pageSize = Number(reportQuery.data?.page_size ?? pagination.page_size) as typeof pagination.page_size;
+  const totalPages = Number(reportQuery.data?.total_pages ?? 0);
+  const hasFilters = Boolean(dateFrom || dateTo || propertyId);
 
   function updateParams(next: Record<string, string | null>) {
     const resolved = new URLSearchParams(searchParams);
@@ -109,117 +163,143 @@ export function ReportsPage() {
       if (value) resolved.set(key, value);
       else resolved.delete(key);
     });
+    resolved.delete("page");
     setSearchParams(resolved);
   }
 
+  function applyFilters() {
+    updateParams({
+      date_from: draft.dateFrom || null,
+      date_to: draft.dateTo || null,
+      property_id: draft.propertyId || null,
+    });
+  }
+
+  function resetFilters() {
+    setDraft({ dateFrom: "", dateTo: "", propertyId: "" });
+    setSearchParams(new URLSearchParams([["kind", kind]]));
+  }
+
   async function exportReport() {
-    const result = await exportMutation.mutateAsync({ kind, params });
+    const result = await exportMutation.mutateAsync({ kind, params: exportParams });
     const extension = result.type.includes("json") ? "json" : result.type.includes("pdf") ? "pdf" : "xlsx";
     downloadBlob(result, `${kind}-report.${extension}`);
   }
 
   const columns: Array<DataTableColumn<FlatRow>> = rowKeys.map((key) => ({
     id: key,
-    header: key.replaceAll("_", " "),
-    cell: (row) => valueLabel(row[key] ?? null),
+    header: fieldLabels[key] ?? key.replaceAll("_", " "),
+    cell: (row) => valueLabel(key, row[key] ?? null),
     numeric: typeof rows.find((row) => row[key] !== null && row[key] !== undefined)?.[key] === "number",
   }));
+
+  const paginationProps = {
+    page,
+    pageSize,
+    total,
+    totalPages,
+    onPageChange: (nextPage: number) => setSearchParams(writePageParams(searchParams, { page: nextPage })),
+    onPageSizeChange: (page_size: typeof pageSize) => setSearchParams(writePageParams(searchParams, { page_size })),
+  };
 
   return (
     <motion.div {...pageMotion}>
       <PageContainer>
         <PageHeader
-          actions={
-            <Can permission="reports.export">
-              <Button className="rounded-full shadow-sm" disabled={exportMutation.isPending} isLoading={exportMutation.isPending} onClick={() => void exportReport()}>
-                <Download aria-hidden="true" className="size-4" />
-                تصدير
-              </Button>
-            </Can>
-          }
-          description="اختيار التقرير، ضبط الفترة والعقار، ثم تصدير النتائج المتاحة من الخادم."
+          description="تحليلات مالية وتشغيلية لمحفظتك العقارية"
           eyebrow="التقارير"
-          title="مركز التقارير"
+          title="التقارير"
         />
-        <section className="grid gap-3 md:grid-cols-4">
+
+        <section aria-label="أنواع التقارير" className="flex gap-1 overflow-x-auto border-b border-border">
           {reportKinds.map((item) => (
             <button
               key={item}
-              className={cn("rounded-xl border border-border bg-card p-4 text-start shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", item === kind && "border-primary bg-primary-soft")}
+              aria-pressed={item === kind}
+              className={cn(
+                "min-h-11 shrink-0 border-b-2 border-transparent px-4 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                item === kind && "border-primary text-primary",
+              )}
               type="button"
               onClick={() => updateParams({ kind: item })}
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
-                <FileBarChart aria-hidden="true" className="size-4" />
-              </span>
-              <p className="mt-3 font-semibold text-foreground">{reportLabels[item].title}</p>
-              <p className="mt-1 text-meta leading-5">{reportLabels[item].description}</p>
+              {reportLabels[item].title}
             </button>
           ))}
         </section>
-        <FilterToolbar className="md:grid-cols-[11rem_11rem_minmax(0,1fr)_auto]">
-          <label className="block space-y-1.5">
-            <span className="text-meta">من تاريخ</span>
-            <Input className="rounded-xl" type="date" value={dateFrom} onChange={(event) => updateParams({ date_from: event.target.value || null })} />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-meta">إلى تاريخ</span>
-            <Input className="rounded-xl" type="date" value={dateTo} onChange={(event) => updateParams({ date_to: event.target.value || null })} />
-          </label>
-          <div className="space-y-1.5">
-            <p className="text-meta">العقار</p>
-            <Select value={propertyId || "all"} onValueChange={(value) => updateParams({ property_id: value === "all" ? null : value })}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="كل العقارات" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">كل العقارات</SelectItem>
-                {(propertiesQuery.data ?? []).map((property) => (
-                  <SelectItem key={property.id} value={String(property.id)}>{property.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+        <section className="rounded-lg border border-border bg-card p-4 shadow-card">
+          <div className="grid gap-3 md:grid-cols-[10rem_10rem_minmax(12rem,1fr)_auto] md:items-end">
+            <label className="block space-y-1.5">
+              <span className="text-meta">من تاريخ</span>
+              <Input type="date" value={draft.dateFrom} onChange={(event) => setDraft((current) => ({ ...current, dateFrom: event.target.value }))} />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-meta">إلى تاريخ</span>
+              <Input type="date" value={draft.dateTo} onChange={(event) => setDraft((current) => ({ ...current, dateTo: event.target.value }))} />
+            </label>
+            <div className="space-y-1.5">
+              <p className="text-meta">العقار</p>
+              <Select value={draft.propertyId || "all"} onValueChange={(value) => setDraft((current) => ({ ...current, propertyId: value === "all" ? "" : value }))}>
+                <SelectTrigger><SelectValue placeholder="كل العقارات" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل العقارات</SelectItem>
+                  {(propertiesQuery.data ?? []).map((property) => <SelectItem key={property.id} value={String(property.id)}>{property.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={applyFilters}><Filter aria-hidden="true" className="size-4" />تطبيق الفلاتر</Button>
+              <Button aria-label="إعادة تعيين الفلاتر" variant="outline" onClick={resetFilters}><RotateCcw aria-hidden="true" className="size-4" />إعادة تعيين</Button>
+              <Can permission="reports.export">
+                <Button disabled={exportMutation.isPending} isLoading={exportMutation.isPending} variant="outline" onClick={() => void exportReport()}>
+                  <Download aria-hidden="true" className="size-4" />تصدير
+                </Button>
+              </Can>
+            </div>
           </div>
-          <Button className="h-11 rounded-xl" variant="outline" onClick={() => setSearchParams(new URLSearchParams([["kind", kind]]))}>
-            <Filter aria-hidden="true" className="size-4" />
-            مسح التصفية
-          </Button>
-        </FilterToolbar>
+        </section>
+
         {exportMutation.isError ? <ErrorState compact title="تعذر التصدير" description={normalizeApiError(exportMutation.error).message} /> : null}
+
         {summary.length > 0 ? (
-          <section className="grid gap-3 md:grid-cols-4">
-            {summary.slice(0, 8).map(([label, value]) => (
-              <Card key={label}>
-                <CardHeader className="pb-2"><CardTitle className="text-sm">{label.replaceAll("_", " ")}</CardTitle></CardHeader>
-                <CardContent><p className="font-numeric text-xl font-bold text-foreground">{valueLabel(value)}</p></CardContent>
+          <section aria-label="ملخص التقرير" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {summary.map(([key, value]) => (
+              <Card key={key}>
+                <CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">{fieldLabels[key] ?? key.replaceAll("_", " ")}</CardTitle></CardHeader>
+                <CardContent><p className="font-numeric text-xl font-bold text-foreground">{valueLabel(key, value)}</p></CardContent>
               </Card>
             ))}
           </section>
         ) : null}
-        {reportQuery.isError ? (
-          <ErrorState title="تعذر تحميل التقرير" description={normalizeApiError(reportQuery.error).message} onRetry={() => void reportQuery.refetch()} />
-        ) : rows.length > 0 && columns.length > 0 ? (
-          <DataTable columns={columns} data={rows} getRowId={(_row) => rows.indexOf(_row)} loading={reportQuery.isPending} emptyTitle="لا توجد بيانات" emptyDescription="لم يرجع التقرير صفوفًا قابلة للعرض." />
-        ) : reportQuery.isPending ? (
-          <DataTable columns={[{ id: "loading", header: reportLabels[kind].title, cell: () => "" }]} data={[]} getRowId={() => 0} loading />
-        ) : (
-          <EmptyState compact action={<Badge variant="muted">{kind}</Badge>} description="استجاب التقرير بدون صفوف جدولية. إذا كان الخادم يرجع ملخصًا فقط فسيظهر أعلى الصفحة." title="لا توجد صفوف للتقرير" />
-        )}
-        <section className="rounded-xl border border-border bg-card p-4 shadow-card">
-          <div className="flex items-center gap-2">
-            <BarChart3 aria-hidden="true" className="size-4 text-primary" />
-            <h2 className="text-section text-foreground">حدود التقارير</h2>
+
+        <section aria-labelledby="report-details-title" className="space-y-3">
+          <div>
+            <h2 id="report-details-title" className="text-section text-foreground">تفاصيل {reportLabels[kind].title}</h2>
+            <p className="mt-1 text-meta">{reportLabels[kind].description}</p>
           </div>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">يعرض المركز أنواع التقارير التي يوفرها الخادم حاليًا. عند رجوع ملخصات أو صفوف غير موثقة، تعرض الواجهة البيانات القابلة للقراءة فقط وتحافظ على بقية التقرير بأمان.</p>
+          {reportQuery.isError ? (
+            <ErrorState title="تعذر تحميل التقرير" description={normalizeApiError(reportQuery.error).message} onRetry={() => void reportQuery.refetch()} />
+          ) : rows.length > 0 && columns.length > 0 ? (
+            <DataTable
+              columns={columns}
+              data={rows}
+              getRowId={(row) => String(row.payment_id ?? row.contract_id ?? row.request_id ?? rows.indexOf(row))}
+              loading={reportQuery.isPending}
+              pagination={paginationProps}
+              updating={reportQuery.isFetching && !reportQuery.isPending}
+            />
+          ) : reportQuery.isPending ? (
+            <DataTable columns={[{ id: "loading", header: reportLabels[kind].title, cell: () => "" }]} data={[]} getRowId={() => 0} loading />
+          ) : (
+            <EmptyState
+              compact
+              description={hasFilters ? "لا توجد نتائج مطابقة للفلاتر المحددة" : undefined}
+              title={hasFilters ? "لا توجد نتائج مطابقة للفلاتر المحددة" : "لا توجد بيانات حتى الآن"}
+            />
+          )}
         </section>
       </PageContainer>
     </motion.div>
   );
 }
-
-
-
-
-
-
-

@@ -26,16 +26,17 @@ import { applyApiFieldErrors } from "@/lib/formErrors";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { maintenanceStatusLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
-import { maintenanceStatuses, type VendorOut } from "@/types/resources";
+import type { SelectOption } from "@/types/api";
+import { maintenanceStatuses } from "@/types/resources";
 
-type AssignDialogProps = { open: boolean; vendors: VendorOut[]; isLoading: boolean; onOpenChange: (open: boolean) => void; onSubmit: (values: MaintenanceAssignValues) => Promise<void> };
+type AssignDialogProps = { open: boolean; vendors: SelectOption[]; isLoading: boolean; onOpenChange: (open: boolean) => void; onSubmit: (values: MaintenanceAssignValues) => Promise<void> };
 type TransitionDialogProps = { open: boolean; isLoading: boolean; onOpenChange: (open: boolean) => void; onSubmit: (values: MaintenanceTransitionValues) => Promise<void> };
 
 
 function AssignDialog({ open, vendors, isLoading, onOpenChange, onSubmit }: AssignDialogProps) {
   const form = useForm<MaintenanceAssignValues>({ resolver: zodResolver(maintenanceAssignSchema), defaultValues: { vendor_id: 0 } });
   async function submit(values: MaintenanceAssignValues) { try { await onSubmit(values); form.reset(); onOpenChange(false); } catch (error) { const apiError = applyApiFieldErrors(error, form.setError); form.setError("root", { message: apiError.message }); } }
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>إسناد البلاغ</DialogTitle><DialogDescription>اختر المورد المطلوب حسب Assignment.vendor_id.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={(event) => void form.handleSubmit(submit)(event)}><FormField error={form.formState.errors.vendor_id?.message} label="المورد" required><Select value={form.watch("vendor_id") ? String(form.watch("vendor_id")) : ""} onValueChange={(value) => form.setValue("vendor_id", Number(value), { shouldValidate: true })}><SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger><SelectContent>{vendors.map((vendor) => <SelectItem key={vendor.id} value={String(vendor.id)}>{vendor.name}</SelectItem>)}</SelectContent></Select></FormField>{form.formState.errors.root?.message ? <p className="rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs text-destructive">{form.formState.errors.root.message}</p> : null}<div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button><Button isLoading={isLoading} type="submit">إسناد</Button></div></form></DialogContent></Dialog>;
+  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>إسناد البلاغ</DialogTitle><DialogDescription>اختر المورد المطلوب حسب Assignment.vendor_id.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={(event) => void form.handleSubmit(submit)(event)}><FormField error={form.formState.errors.vendor_id?.message} label="المورد" required><Select value={form.watch("vendor_id") ? String(form.watch("vendor_id")) : ""} onValueChange={(value) => form.setValue("vendor_id", Number(value), { shouldValidate: true })}><SelectTrigger><SelectValue placeholder="اختر المورد" /></SelectTrigger><SelectContent>{vendors.map((vendor) => <SelectItem key={vendor.id} value={String(vendor.id)}>{vendor.label}</SelectItem>)}</SelectContent></Select></FormField>{form.formState.errors.root?.message ? <p className="rounded-md border border-destructive/25 bg-destructive/10 px-3 py-2 text-xs text-destructive">{form.formState.errors.root.message}</p> : null}<div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button><Button isLoading={isLoading} type="submit">إسناد</Button></div></form></DialogContent></Dialog>;
 }
 
 function TransitionDialog({ open, isLoading, onOpenChange, onSubmit }: TransitionDialogProps) {

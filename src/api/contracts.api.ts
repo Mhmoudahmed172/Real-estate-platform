@@ -1,7 +1,7 @@
 import { apiClient } from "@/api/client";
 import { createResourceApi } from "@/api/resource.api";
-import { parseContractList, parseContractOut, parsePaymentList } from "@/lib/parsers";
-import type { Id, UnknownRecord } from "@/types/api";
+import { parseContractList, parseContractOut, parsePage, parsePaymentList } from "@/lib/parsers";
+import type { Id, PagedParams, UnknownRecord } from "@/types/api";
 import type { ContractCreate, ContractListParams, ContractRenewal, ContractUpdate } from "@/types/resources";
 
 const resource = createResourceApi<ContractCreate, ContractUpdate, UnknownRecord>("/contracts/");
@@ -9,6 +9,9 @@ const resource = createResourceApi<ContractCreate, ContractUpdate, UnknownRecord
 export const contractsApi = {
   list(params?: ContractListParams) {
     return apiClient.get<unknown>("/contracts/", { params }).then((response) => parseContractList(response.data));
+  },
+  page(params: PagedParams<ContractListParams>) {
+    return apiClient.get<unknown>("/contracts/page", { params }).then((response) => parsePage(response.data, parseContractList));
   },
   get(id: number) {
     return apiClient.get<unknown>(`/contracts/${id}`).then((response) => {

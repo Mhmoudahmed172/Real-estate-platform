@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { tenantsApi } from "@/api/tenants.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { TenantCreate, TenantListParams, TenantUpdate } from "@/types/resources";
 
 const tenantsKeys = queryKeys.resource("tenants");
@@ -13,6 +13,10 @@ export function useTenantsList(params: TenantListParams) {
     queryFn: () => tenantsApi.list(params),
     ...listQueryDefaults,
   });
+}
+
+export function useTenantsPage(params: PagedParams<TenantListParams>) {
+  return useQuery({ queryKey: [...tenantsKeys.list(params), "page"], queryFn: () => tenantsApi.page(params), ...listQueryDefaults });
 }
 
 export function useTenant(id: Id | undefined) {

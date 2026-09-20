@@ -1,11 +1,17 @@
 import { apiClient } from "@/api/client";
-import { parseContractList, parseTenantList, parseTenantOut } from "@/lib/parsers";
-import type { Id, UnknownRecord } from "@/types/api";
+import { parseContractList, parsePage, parseTenantList, parseTenantOut } from "@/lib/parsers";
+import type { Id, PagedParams, SelectOption, UnknownRecord } from "@/types/api";
 import type { TenantCreate, TenantListParams, TenantUpdate } from "@/types/resources";
 
 export const tenantsApi = {
   list(params?: TenantListParams) {
     return apiClient.get<unknown>("/tenants/", { params }).then((response) => parseTenantList(response.data));
+  },
+  page(params: PagedParams<TenantListParams>) {
+    return apiClient.get<unknown>("/tenants/page", { params }).then((response) => parsePage(response.data, parseTenantList));
+  },
+  options(params?: { search?: string; limit?: number }) {
+    return apiClient.get<SelectOption[]>("/tenants/options", { params }).then((response) => response.data);
   },
   get(id: number) {
     return apiClient.get<unknown>(`/tenants/${id}`).then((response) => {

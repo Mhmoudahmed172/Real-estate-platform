@@ -3,7 +3,7 @@ import { ownersApi } from "@/api/owners.api";
 import { propertiesApi } from "@/api/properties.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { PropertyCreate, PropertyListParams, PropertyUpdate } from "@/types/resources";
 
 export function usePropertiesList(params: PropertyListParams) {
@@ -12,6 +12,10 @@ export function usePropertiesList(params: PropertyListParams) {
     queryFn: () => propertiesApi.list(params),
     ...listQueryDefaults,
   });
+}
+
+export function usePropertiesPage(params: PagedParams<PropertyListParams>) {
+  return useQuery({ queryKey: [...queryKeys.properties.list(params), "page"], queryFn: () => propertiesApi.page(params), ...listQueryDefaults });
 }
 
 export function useProperty(id: Id | undefined) {
@@ -40,8 +44,8 @@ export function usePropertyOwner(ownerId: number | null | undefined) {
 
 export function useOwnersOptions() {
   return useQuery({
-    queryKey: queryKeys.resource("owners").list({ limit: 200 }),
-    queryFn: () => ownersApi.list({ limit: 200 }),
+    queryKey: [...queryKeys.resource("owners").all, "options"],
+    queryFn: () => ownersApi.options({ limit: 50 }),
     ...listQueryDefaults,
   });
 }

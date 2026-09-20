@@ -6,7 +6,7 @@ import { tenantsApi } from "@/api/tenants.api";
 import { unitsApi } from "@/api/units.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { ContractCreate, ContractListParams, ContractRenewal, ContractUpdate } from "@/types/resources";
 
 const contractsKeys = queryKeys.resource("contracts");
@@ -14,6 +14,10 @@ const paymentsKeys = queryKeys.resource("payments");
 
 export function useContractsList(params: ContractListParams) {
   return useQuery({ queryKey: contractsKeys.list(params), queryFn: () => contractsApi.list(params), ...listQueryDefaults });
+}
+
+export function useContractsPage(params: PagedParams<ContractListParams>) {
+  return useQuery({ queryKey: [...contractsKeys.list(params), "page"], queryFn: () => contractsApi.page(params), ...listQueryDefaults });
 }
 
 export function useContract(id: Id | undefined) {
@@ -66,9 +70,9 @@ export function useContractRelations(contract?: { property_id: number; unit_id: 
 }
 
 export function useContractOptions() {
-  const propertiesQuery = useQuery({ queryKey: queryKeys.properties.list({ limit: 200 }), queryFn: () => propertiesApi.list({ limit: 200 }) });
-  const ownersQuery = useQuery({ queryKey: queryKeys.resource("owners").list({ limit: 200 }), queryFn: () => ownersApi.list({ limit: 200 }) });
-  const tenantsQuery = useQuery({ queryKey: queryKeys.resource("tenants").list({ limit: 200 }), queryFn: () => tenantsApi.list({ limit: 200 }) });
+  const propertiesQuery = useQuery({ queryKey: [...queryKeys.properties.all, "options"], queryFn: () => propertiesApi.options({ limit: 50 }) });
+  const ownersQuery = useQuery({ queryKey: [...queryKeys.resource("owners").all, "options"], queryFn: () => ownersApi.options({ limit: 50 }) });
+  const tenantsQuery = useQuery({ queryKey: [...queryKeys.resource("tenants").all, "options"], queryFn: () => tenantsApi.options({ limit: 50 }) });
   return { propertiesQuery, ownersQuery, tenantsQuery };
 }
 

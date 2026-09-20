@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { DataTableShell } from "@/components/tables/DataTableShell";
-import { Button } from "@/components/ui/Button";
+import { Pagination } from "@/components/tables/Pagination";
 import { cn } from "@/lib/utils";
+import type { PageSize } from "@/types/api";
 
 export type DataTableColumn<T> = {
   id: string;
@@ -23,11 +24,15 @@ type DataTableProps<T> = {
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
-  pageSize?: number;
-  hasMore?: boolean;
-  hasPrevious?: boolean;
-  onNextPage?: () => void;
-  onPreviousPage?: () => void;
+  updating?: boolean;
+  pagination?: {
+    page: number;
+    pageSize: PageSize;
+    total: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (pageSize: PageSize) => void;
+  };
 };
 
 export function DataTable<T>({
@@ -40,17 +45,15 @@ export function DataTable<T>({
   emptyTitle = "لا توجد سجلات",
   emptyDescription,
   emptyAction,
-  hasMore = false,
-  hasPrevious = false,
-  onNextPage,
-  onPreviousPage,
+  updating = false,
+  pagination,
 }: DataTableProps<T>) {
   const visibleColumns = actions ? columns.length + 1 : columns.length;
 
   return (
     <DataTableShell>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-sm">
+      <div className="relative overflow-x-auto">
+        <table aria-busy={loading || updating} className={cn("w-full min-w-[760px] border-collapse text-sm transition-opacity", updating && "opacity-70")}>
           <thead className="bg-muted/65">
             <tr className="border-b border-border text-muted-foreground">
               {columns.map((column) => (
@@ -125,19 +128,7 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
-      {onNextPage || onPreviousPage ? (
-        <div className="flex flex-col gap-3 border-t border-border bg-muted/50 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-meta">تصفح النتائج حسب حد القائمة</p>
-          <div className="flex items-center gap-2">
-            <Button className="rounded-full" disabled={!hasPrevious || loading} size="sm" variant="outline" onClick={onPreviousPage}>
-              السابق
-            </Button>
-            <Button className="rounded-full" disabled={!hasMore || loading} size="sm" variant="outline" onClick={onNextPage}>
-              التالي
-            </Button>
-          </div>
-        </div>
-      ) : null}
+      {pagination ? <Pagination {...pagination} isFetching={updating} /> : null}
     </DataTableShell>
   );
 }

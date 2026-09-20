@@ -1,11 +1,17 @@
 import { apiClient } from "@/api/client";
-import { parsePropertyList, parsePropertyOut, parseUnitList } from "@/lib/parsers";
-import type { Id } from "@/types/api";
+import { parsePage, parsePropertyList, parsePropertyOut, parseUnitList } from "@/lib/parsers";
+import type { Id, PagedParams, SelectOption } from "@/types/api";
 import type { PropertyCreate, PropertyListParams, PropertyUpdate } from "@/types/resources";
 
 export const propertiesApi = {
   list(params?: PropertyListParams) {
     return apiClient.get<unknown>("/properties/", { params }).then((response) => parsePropertyList(response.data));
+  },
+  page(params: PagedParams<PropertyListParams>) {
+    return apiClient.get<unknown>("/properties/page", { params }).then((response) => parsePage(response.data, parsePropertyList));
+  },
+  options(params?: { search?: string; limit?: number }) {
+    return apiClient.get<SelectOption[]>("/properties/options", { params }).then((response) => response.data);
   },
   get(id: Id) {
     return apiClient.get<unknown>(`/properties/${id}`).then((response) => {

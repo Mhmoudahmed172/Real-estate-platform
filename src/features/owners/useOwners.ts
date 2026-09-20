@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ownersApi } from "@/api/owners.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { OwnerCreate, OwnerListParams, OwnerUpdate } from "@/types/resources";
 
 const ownersKeys = queryKeys.resource("owners");
@@ -13,6 +13,10 @@ export function useOwnersList(params: OwnerListParams) {
     queryFn: () => ownersApi.list(params),
     ...listQueryDefaults,
   });
+}
+
+export function useOwnersPage(params: PagedParams<OwnerListParams>) {
+  return useQuery({ queryKey: [...ownersKeys.list(params), "page"], queryFn: () => ownersApi.page(params), ...listQueryDefaults });
 }
 
 export function useOwner(id: Id | undefined) {

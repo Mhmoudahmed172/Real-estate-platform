@@ -9,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { unitFormSchema, type UnitFormValues } from "@/features/units/unitSchema";
 import { applyApiFieldErrors } from "@/lib/formErrors";
 import { unitStatusLabels } from "@/lib/labels";
-import { unitStatuses, type PropertyOut, type UnitCreate, type UnitOut, type UnitUpdate } from "@/types/resources";
+import type { SelectOption } from "@/types/api";
+import { unitStatuses, type UnitCreate, type UnitOut, type UnitUpdate } from "@/types/resources";
 
 type UnitFormProps = {
   mode: "create" | "edit";
   defaultUnit?: UnitOut;
-  properties: PropertyOut[];
+  properties: SelectOption[];
   onSubmit: (payload: UnitCreate & { status?: UnitUpdate["status"] }) => Promise<void>;
   onCancelHref?: string;
 };
@@ -74,7 +75,7 @@ export function UnitForm({ mode, defaultUnit, properties, onSubmit, onCancelHref
               <SelectContent>
                 {properties.map((property) => (
                   <SelectItem key={property.id} value={String(property.id)}>
-                    {property.name}
+                    {property.label}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,10 +1,13 @@
 import { apiClient } from "@/api/client";
-import type { Id, PaginationParams, UnknownRecord } from "@/types/api";
+import type { Id, PageParams, PageResponse, PaginationParams, UnknownRecord } from "@/types/api";
 import type { Role, User, UserCreate, UserUpdate } from "@/types/auth";
 
 export const usersApi = {
   list(params?: PaginationParams) {
     return apiClient.get<User[]>("/users/", { params }).then((response) => response.data);
+  },
+  page(params: PageParams) {
+    return apiClient.get<PageResponse<User>>("/users/page", { params }).then((response) => response.data);
   },
   create(payload: UserCreate) {
     return apiClient.post<User>("/users/", payload).then((response) => response.data);

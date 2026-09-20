@@ -3,6 +3,28 @@ export type PaginationParams = {
   limit?: number;
 };
 
+export type PageSize = 10 | 20 | 50;
+
+export type PageParams = {
+  page: number;
+  page_size: PageSize;
+};
+
+export type PagedParams<T extends PaginationParams> = Omit<T, "skip" | "limit"> & PageParams;
+
+export type PageResponse<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: PageSize;
+  total_pages: number;
+};
+
+export type SelectOption = {
+  id: number;
+  label: string;
+};
+
 export type Id = number | string;
 
 export type UnknownRecord = Record<string, unknown>;

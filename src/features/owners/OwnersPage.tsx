@@ -8,23 +8,32 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Pagination } from "@/components/tables/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuthorization } from "@/features/auth/useAuthorization";
-import { useOwnersList } from "@/features/owners/useOwners";
+import { useOwnersPage } from "@/features/owners/useOwners";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
 import type { OwnerOut } from "@/types/resources";
-
-const PAGE_SIZE = 20;
 
 export function OwnersPage() {
   const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  const skip = Number(searchParams.get("skip") ?? 0);
-  const params = useMemo(() => ({ q: query || undefined, skip, limit: PAGE_SIZE }), [query, skip]);
-  const listQuery = useOwnersList(params);
+  const pagination = readPageParams(searchParams);
+  const params = useMemo(() => ({ q: query || undefined, ...pagination }), [pagination.page, pagination.page_size, query]);
+  const listQuery = useOwnersPage(params);
+  const pageData = listQuery.data;
+  const paginationProps = pageData ? {
+    page: pageData.page,
+    pageSize: pageData.page_size,
+    total: pageData.total,
+    totalPages: pageData.total_pages,
+    onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
+    onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
+  } : undefined;
 
   function updateParams(next: Record<string, string | null>) {
     const resolved = new URLSearchParams(searchParams);
@@ -32,7 +41,7 @@ export function OwnersPage() {
       if (value) resolved.set(key, value);
       else resolved.delete(key);
     });
-    if (next.q !== undefined) resolved.delete("skip");
+    if (next.q !== undefined) resolved.delete("page");
     setSearchParams(resolved);
   }
 
@@ -118,7 +127,7 @@ export function OwnersPage() {
                   </>
                 )}
                 columns={columns}
-                data={listQuery.data ?? []}
+                data={pageData?.items ?? []}
                 emptyAction={
                   can("owners.create") ? (
                     <Button asChild size="sm">
@@ -129,18 +138,16 @@ export function OwnersPage() {
                 emptyDescription="لا توجد سجلات ملاك مطابقة."
                 emptyTitle="لا يوجد ملاك"
                 getRowId={(row) => row.id}
-                hasMore={(listQuery.data?.length ?? 0) === PAGE_SIZE}
-                hasPrevious={skip > 0}
                 loading={listQuery.isPending}
-                onNextPage={() => updateParams({ skip: String(skip + PAGE_SIZE) })}
-                onPreviousPage={() => updateParams({ skip: skip <= PAGE_SIZE ? null : String(skip - PAGE_SIZE) })}
+                pagination={paginationProps}
+                updating={listQuery.isFetching && !listQuery.isPending}
                 onRowClick={(row) => navigate(`/owners/${row.id}`)}
               />
             </div>
             <div className="grid gap-2 md:hidden">
               {listQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل الملاك...</p>
-              ) : (listQuery.data ?? []).length === 0 ? (
+              ) : (pageData?.items ?? []).length === 0 ? (
                 <EmptyState
                   compact
                   action={
@@ -154,7 +161,7 @@ export function OwnersPage() {
                   title="لا يوجد ملاك"
                 />
               ) : null}
-              {(listQuery.data ?? []).map((owner) => (
+              {(pageData?.items ?? []).map((owner) => (
                 <Link
                   key={owner.id}
                   className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover"
@@ -178,6 +185,7 @@ export function OwnersPage() {
                   </div>
                 </Link>
               ))}
+              {paginationProps ? <Pagination {...paginationProps} isFetching={listQuery.isFetching && !listQuery.isPending} /> : null}
             </div>
           </>
         )}

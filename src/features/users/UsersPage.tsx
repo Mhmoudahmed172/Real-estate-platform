@@ -9,15 +9,15 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Pagination } from "@/components/tables/Pagination";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useAuthorization } from "@/features/auth/useAuthorization";
-import { useUserMutations, useUsersList } from "@/features/users/useUsers";
+import { useUserMutations, useUsersPage } from "@/features/users/useUsers";
 import { normalizeApiError } from "@/api/errors";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
 import type { User } from "@/types/auth";
-
-const PAGE_SIZE = 20;
 
 function UserStatusBadge({ user }: { user: User }) {
   if (!user.is_active) return <Badge variant="muted">معطل</Badge>;
@@ -33,18 +33,20 @@ export function UsersPage() {
   const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const skip = Number(searchParams.get("skip") ?? 0);
-  const usersQuery = useUsersList({ skip, limit: PAGE_SIZE });
+  const pagination = readPageParams(searchParams);
+  const usersQuery = useUsersPage(pagination);
+  const pageData = usersQuery.data;
+  const paginationProps = pageData ? {
+    page: pageData.page,
+    pageSize: pageData.page_size,
+    total: pageData.total,
+    totalPages: pageData.total_pages,
+    onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
+    onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
+  } : undefined;
   const { deleteMutation } = useUserMutations();
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  function updateSkip(nextSkip: number | null) {
-    const resolved = new URLSearchParams(searchParams);
-    if (nextSkip && nextSkip > 0) resolved.set("skip", String(nextSkip));
-    else resolved.delete("skip");
-    setSearchParams(resolved);
-  }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -52,7 +54,9 @@ export function UsersPage() {
     try {
       await deleteMutation.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
-      if ((usersQuery.data?.length ?? 0) === 1 && skip > 0) updateSkip(Math.max(0, skip - PAGE_SIZE));
+      if ((pageData?.items.length ?? 0) === 1 && pagination.page > 1) {
+        setSearchParams(writePageParams(searchParams, { page: pagination.page - 1 }));
+      }
     } catch (error) {
       setDeleteError(normalizeApiError(error).message);
     }
@@ -140,26 +144,24 @@ export function UsersPage() {
                   </>
                 )}
                 columns={columns}
-                data={usersQuery.data ?? []}
+                data={pageData?.items ?? []}
                 emptyAction={can("users.create") ? <Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button> : undefined}
                 emptyDescription="لا توجد حسابات مستخدمين في الصفحة الحالية."
                 emptyTitle="لا يوجد مستخدمون"
                 getRowId={(row) => row.id}
-                hasMore={(usersQuery.data?.length ?? 0) === PAGE_SIZE}
-                hasPrevious={skip > 0}
                 loading={usersQuery.isPending}
-                onNextPage={() => updateSkip(skip + PAGE_SIZE)}
-                onPreviousPage={() => updateSkip(skip <= PAGE_SIZE ? null : skip - PAGE_SIZE)}
+                pagination={paginationProps}
+                updating={usersQuery.isFetching && !usersQuery.isPending}
                 onRowClick={can("users.update") ? (row) => navigate(`/users/${row.id}/edit`) : undefined}
               />
             </div>
             <div className="grid gap-2 md:hidden">
               {usersQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل المستخدمين...</p>
-              ) : (usersQuery.data ?? []).length === 0 ? (
+              ) : (pageData?.items ?? []).length === 0 ? (
                 <EmptyState compact action={can("users.create") ? <Button asChild size="sm"><Link to="/users/new">إضافة مستخدم</Link></Button> : undefined} description="لا توجد حسابات مستخدمين في الصفحة الحالية." title="لا يوجد مستخدمون" />
               ) : null}
-              {(usersQuery.data ?? []).map((user) => (
+              {(pageData?.items ?? []).map((user) => (
                 <div key={user.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -181,6 +183,7 @@ export function UsersPage() {
                   </div>
                 </div>
               ))}
+              {paginationProps ? <Pagination {...paginationProps} isFetching={usersQuery.isFetching && !usersQuery.isPending} /> : null}
             </div>
           </>
         )}

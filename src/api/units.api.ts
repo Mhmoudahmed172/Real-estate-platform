@@ -1,12 +1,15 @@
 import { apiClient } from "@/api/client";
-import { parseUnitList, parseUnitOut } from "@/lib/parsers";
-import type { Id } from "@/types/api";
+import { parsePage, parseUnitList, parseUnitOut } from "@/lib/parsers";
+import type { Id, PagedParams } from "@/types/api";
 import type { AvailabilityParams } from "@/types/domain";
 import type { UnitCreate, UnitListParams, UnitOut, UnitUpdate } from "@/types/resources";
 
 export const unitsApi = {
   list(params?: UnitListParams) {
     return apiClient.get<unknown>("/units/", { params }).then((response) => parseUnitList(response.data));
+  },
+  page(params: PagedParams<UnitListParams>) {
+    return apiClient.get<unknown>("/units/page", { params }).then((response) => parsePage(response.data, parseUnitList));
   },
   get(id: number) {
     return apiClient.get<unknown>(`/units/${id}`).then((response) => {

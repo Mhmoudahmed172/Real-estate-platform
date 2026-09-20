@@ -1,11 +1,14 @@
 import { apiClient } from "@/api/client";
-import { parsePaymentList, parsePaymentOut } from "@/lib/parsers";
-import type { Id, UnknownRecord } from "@/types/api";
+import { parsePage, parsePaymentList, parsePaymentOut } from "@/lib/parsers";
+import type { Id, PagedParams, UnknownRecord } from "@/types/api";
 import type { PaymentAdjustment, PaymentListParams, PaymentRecord } from "@/types/resources";
 
 export const paymentsApi = {
   list(params?: PaymentListParams) {
     return apiClient.get<unknown>("/payments/", { params }).then((response) => parsePaymentList(response.data));
+  },
+  page(params: PagedParams<PaymentListParams>) {
+    return apiClient.get<unknown>("/payments/page", { params }).then((response) => parsePage(response.data, parsePaymentList));
   },
   get(paymentId: Id) {
     return apiClient.get<unknown>(`/payments/${paymentId}`).then((response) => {

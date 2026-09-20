@@ -1,11 +1,17 @@
 import { apiClient } from "@/api/client";
-import { parseContractList, parseOwnerList, parseOwnerOut, parsePropertyList } from "@/lib/parsers";
-import type { Id, UnknownRecord } from "@/types/api";
+import { parseContractList, parseOwnerList, parseOwnerOut, parsePage, parsePropertyList } from "@/lib/parsers";
+import type { Id, PagedParams, SelectOption, UnknownRecord } from "@/types/api";
 import type { OwnerCreate, OwnerListParams, OwnerUpdate } from "@/types/resources";
 
 export const ownersApi = {
   list(params?: OwnerListParams) {
     return apiClient.get<unknown>("/owners/", { params }).then((response) => parseOwnerList(response.data));
+  },
+  page(params: PagedParams<OwnerListParams>) {
+    return apiClient.get<unknown>("/owners/page", { params }).then((response) => parsePage(response.data, parseOwnerList));
+  },
+  options(params?: { search?: string; limit?: number }) {
+    return apiClient.get<SelectOption[]>("/owners/options", { params }).then((response) => response.data);
   },
   get(id: number) {
     return apiClient.get<unknown>(`/owners/${id}`).then((response) => {

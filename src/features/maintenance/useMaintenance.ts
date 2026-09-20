@@ -5,7 +5,7 @@ import { unitsApi } from "@/api/units.api";
 import { vendorsApi } from "@/api/vendors.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { Assignment, MaintenanceCreate, MaintenanceListParams, MaintenanceTransition, MaintenanceUpdate } from "@/types/resources";
 
 const maintenanceKeys = queryKeys.resource("maintenance");
@@ -13,6 +13,10 @@ const vendorsKeys = queryKeys.resource("vendors");
 
 export function useMaintenanceList(params: MaintenanceListParams) {
   return useQuery({ queryKey: maintenanceKeys.list(params), queryFn: () => maintenanceApi.list(params), ...listQueryDefaults });
+}
+
+export function useMaintenancePage(params: PagedParams<MaintenanceListParams>) {
+  return useQuery({ queryKey: [...maintenanceKeys.list(params), "page"], queryFn: () => maintenanceApi.page(params), ...listQueryDefaults });
 }
 
 export function useMaintenanceRequest(id: Id | undefined) {
@@ -24,8 +28,8 @@ export function useMaintenanceHistory(id: Id | undefined) {
 }
 
 export function useMaintenanceOptions() {
-  const propertiesQuery = useQuery({ queryKey: queryKeys.properties.list({ limit: 200 }), queryFn: () => propertiesApi.list({ limit: 200 }) });
-  const vendorsQuery = useQuery({ queryKey: vendorsKeys.list({ limit: 200 }), queryFn: () => vendorsApi.list({ limit: 200 }) });
+  const propertiesQuery = useQuery({ queryKey: [...queryKeys.properties.all, "options"], queryFn: () => propertiesApi.options({ limit: 50 }) });
+  const vendorsQuery = useQuery({ queryKey: [...vendorsKeys.all, "options"], queryFn: () => vendorsApi.options({ limit: 50 }) });
   return { propertiesQuery, vendorsQuery };
 }
 

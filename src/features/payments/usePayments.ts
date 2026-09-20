@@ -3,7 +3,7 @@ import { contractsApi } from "@/api/contracts.api";
 import { paymentsApi } from "@/api/payments.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { PaymentAdjustment, PaymentListParams, PaymentRecord } from "@/types/resources";
 
 const paymentsKeys = queryKeys.resource("payments");
@@ -16,6 +16,10 @@ function makeIdempotencyKey() {
 
 export function usePaymentsList(params: PaymentListParams) {
   return useQuery({ queryKey: paymentsKeys.list(params), queryFn: () => paymentsApi.list(params), ...listQueryDefaults });
+}
+
+export function usePaymentsPage(params: PagedParams<PaymentListParams>) {
+  return useQuery({ queryKey: [...paymentsKeys.list(params), "page"], queryFn: () => paymentsApi.page(params), ...listQueryDefaults });
 }
 
 export function usePayment(id: Id | undefined) {

@@ -1,4 +1,5 @@
 import { asNullableNumber, asNullableString, asNumber, asString, isOneOf, isRecord } from "@/lib/guards";
+import type { PageResponse, PageSize } from "@/types/api";
 import {
   contractStatuses,
   maintenancePriorities,
@@ -18,6 +19,19 @@ import {
   type UnitOut,
   type VendorOut,
 } from "@/types/resources";
+
+export function parsePage<T>(value: unknown, parseItems: (items: unknown) => T[]): PageResponse<T> {
+  if (!isRecord(value)) throw new Error("تعذر قراءة بيانات الصفحة.");
+  const pageSize = Number(value.page_size);
+  if (![10, 20, 50].includes(pageSize)) throw new Error("حجم الصفحة غير صالح.");
+  return {
+    items: parseItems(value.items),
+    total: Number(value.total) || 0,
+    page: Number(value.page) || 1,
+    page_size: pageSize as PageSize,
+    total_pages: Number(value.total_pages) || 0,
+  };
+}
 
 function parseArray<T>(value: unknown, parseItem: (item: unknown) => T | null): T[] {
   if (!Array.isArray(value)) return [];

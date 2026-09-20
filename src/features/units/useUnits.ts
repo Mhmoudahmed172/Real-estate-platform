@@ -3,7 +3,7 @@ import { propertiesApi } from "@/api/properties.api";
 import { unitsApi } from "@/api/units.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { UnitCreate, UnitListParams, UnitUpdate } from "@/types/resources";
 
 const unitsKeys = queryKeys.resource("units");
@@ -14,6 +14,10 @@ export function useUnitsList(params: UnitListParams) {
     queryFn: () => unitsApi.list(params),
     ...listQueryDefaults,
   });
+}
+
+export function useUnitsPage(params: PagedParams<UnitListParams>) {
+  return useQuery({ queryKey: [...unitsKeys.list(params), "page"], queryFn: () => unitsApi.page(params), ...listQueryDefaults });
 }
 
 export function useUnit(id: Id | undefined) {
@@ -34,8 +38,8 @@ export function useUnitProperty(propertyId: number | undefined) {
 
 export function usePropertiesOptions() {
   return useQuery({
-    queryKey: queryKeys.properties.list({ limit: 200 }),
-    queryFn: () => propertiesApi.list({ limit: 200 }),
+    queryKey: [...queryKeys.properties.all, "options"],
+    queryFn: () => propertiesApi.options({ limit: 50 }),
   });
 }
 

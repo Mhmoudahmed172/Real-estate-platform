@@ -4,7 +4,7 @@ import { servicesApi } from "@/api/services.api";
 import { vendorsApi } from "@/api/vendors.api";
 import { listQueryDefaults } from "@/app/providers/queryClient";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Id } from "@/types/api";
+import type { Id, PagedParams } from "@/types/api";
 import type { ServiceCreate, ServiceListParams, ServiceUpdate } from "@/types/resources";
 
 const servicesKeys = queryKeys.resource("services");
@@ -14,13 +14,17 @@ export function useServicesList(params: ServiceListParams) {
   return useQuery({ queryKey: servicesKeys.list(params), queryFn: () => servicesApi.list(params), ...listQueryDefaults });
 }
 
+export function useServicesPage(params: PagedParams<ServiceListParams>) {
+  return useQuery({ queryKey: [...servicesKeys.list(params), "page"], queryFn: () => servicesApi.page(params), ...listQueryDefaults });
+}
+
 export function useService(id: Id | undefined) {
   return useQuery({ queryKey: servicesKeys.detail(id ?? "unknown"), queryFn: () => servicesApi.get(id as Id), enabled: id !== undefined });
 }
 
 export function useServiceOptions() {
-  const propertiesQuery = useQuery({ queryKey: queryKeys.properties.list({ limit: 200 }), queryFn: () => propertiesApi.list({ limit: 200 }) });
-  const vendorsQuery = useQuery({ queryKey: vendorsKeys.list({ limit: 200 }), queryFn: () => vendorsApi.list({ limit: 200 }) });
+  const propertiesQuery = useQuery({ queryKey: [...queryKeys.properties.all, "options"], queryFn: () => propertiesApi.options({ limit: 50 }) });
+  const vendorsQuery = useQuery({ queryKey: [...vendorsKeys.all, "options"], queryFn: () => vendorsApi.options({ limit: 50 }) });
   return { propertiesQuery, vendorsQuery };
 }
 

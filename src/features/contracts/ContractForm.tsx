@@ -14,16 +14,17 @@ import { useUnitsForProperty } from "@/features/contracts/useContracts";
 import { applyApiFieldErrors } from "@/lib/formErrors";
 import { formatCurrency, parseMoney } from "@/lib/format";
 import { contractStatusLabels, paymentFrequencyLabels } from "@/lib/labels";
-import { contractStatuses, paymentFrequencies, type ContractCreate, type ContractOut, type ContractUpdate, type OwnerOut, type PropertyOut, type TenantOut } from "@/types/resources";
+import type { SelectOption } from "@/types/api";
+import { contractStatuses, paymentFrequencies, type ContractCreate, type ContractOut, type ContractUpdate } from "@/types/resources";
 
 export type SchedulePreviewHandler = (payload: ContractCreate) => Promise<void>;
 
 type ContractFormProps = {
   mode: "create" | "edit";
   contract?: ContractOut;
-  properties: PropertyOut[];
-  owners: OwnerOut[];
-  tenants: TenantOut[];
+  properties: SelectOption[];
+  owners: SelectOption[];
+  tenants: SelectOption[];
   onSubmit: (payload: ContractCreate | ContractUpdate) => Promise<void>;
   onPreview?: SchedulePreviewHandler;
   previewLoading?: boolean;
@@ -117,7 +118,7 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
             <FormField error={errorFor("property_id")} label="العقار" required>
               <Select value={form.watch("property_id") ? String(form.watch("property_id")) : ""} onValueChange={(value) => { form.setValue("property_id", Number(value), { shouldValidate: true }); form.setValue("unit_id", 0, { shouldValidate: true }); }}>
                 <SelectTrigger><SelectValue placeholder="اختر العقار" /></SelectTrigger>
-                <SelectContent>{properties.map((property) => <SelectItem key={property.id} value={String(property.id)}>{property.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{properties.map((property) => <SelectItem key={property.id} value={String(property.id)}>{property.label}</SelectItem>)}</SelectContent>
               </Select>
             </FormField>
             <FormField error={errorFor("unit_id")} label="الوحدة" required>
@@ -129,13 +130,13 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
             <FormField error={errorFor("owner_id")} label="المالك" required>
               <Select value={form.watch("owner_id") ? String(form.watch("owner_id")) : ""} onValueChange={(value) => form.setValue("owner_id", Number(value), { shouldValidate: true })}>
                 <SelectTrigger><SelectValue placeholder="اختر المالك" /></SelectTrigger>
-                <SelectContent>{owners.map((owner) => <SelectItem key={owner.id} value={String(owner.id)}>{owner.full_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{owners.map((owner) => <SelectItem key={owner.id} value={String(owner.id)}>{owner.label}</SelectItem>)}</SelectContent>
               </Select>
             </FormField>
             <FormField error={errorFor("tenant_id")} label="المستأجر" required>
               <Select value={form.watch("tenant_id") ? String(form.watch("tenant_id")) : ""} onValueChange={(value) => form.setValue("tenant_id", Number(value), { shouldValidate: true })}>
                 <SelectTrigger><SelectValue placeholder="اختر المستأجر" /></SelectTrigger>
-                <SelectContent>{tenants.map((tenant) => <SelectItem key={tenant.id} value={String(tenant.id)}>{tenant.full_name}</SelectItem>)}</SelectContent>
+                <SelectContent>{tenants.map((tenant) => <SelectItem key={tenant.id} value={String(tenant.id)}>{tenant.label}</SelectItem>)}</SelectContent>
               </Select>
             </FormField>
           </div>

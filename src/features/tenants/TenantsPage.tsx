@@ -8,23 +8,32 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Pagination } from "@/components/tables/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuthorization } from "@/features/auth/useAuthorization";
-import { useTenantsList } from "@/features/tenants/useTenants";
+import { useTenantsPage } from "@/features/tenants/useTenants";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
 import type { TenantOut } from "@/types/resources";
-
-const PAGE_SIZE = 20;
 
 export function TenantsPage() {
   const { can } = useAuthorization();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
-  const skip = Number(searchParams.get("skip") ?? 0);
-  const params = useMemo(() => ({ q: query || undefined, skip, limit: PAGE_SIZE }), [query, skip]);
-  const listQuery = useTenantsList(params);
+  const pagination = readPageParams(searchParams);
+  const params = useMemo(() => ({ q: query || undefined, ...pagination }), [pagination.page, pagination.page_size, query]);
+  const listQuery = useTenantsPage(params);
+  const pageData = listQuery.data;
+  const paginationProps = pageData ? {
+    page: pageData.page,
+    pageSize: pageData.page_size,
+    total: pageData.total,
+    totalPages: pageData.total_pages,
+    onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
+    onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
+  } : undefined;
 
   function updateParams(next: Record<string, string | null>) {
     const resolved = new URLSearchParams(searchParams);
@@ -32,7 +41,7 @@ export function TenantsPage() {
       if (value) resolved.set(key, value);
       else resolved.delete(key);
     });
-    if (next.q !== undefined) resolved.delete("skip");
+    if (next.q !== undefined) resolved.delete("page");
     setSearchParams(resolved);
   }
 
@@ -118,7 +127,7 @@ export function TenantsPage() {
                   </>
                 )}
                 columns={columns}
-                data={listQuery.data ?? []}
+                data={pageData?.items ?? []}
                 emptyAction={
                   can("tenants.create") ? (
                     <Button asChild size="sm">
@@ -129,18 +138,16 @@ export function TenantsPage() {
                 emptyDescription="لا توجد سجلات مستأجرين مطابقة."
                 emptyTitle="لا يوجد مستأجرون"
                 getRowId={(row) => row.id}
-                hasMore={(listQuery.data?.length ?? 0) === PAGE_SIZE}
-                hasPrevious={skip > 0}
                 loading={listQuery.isPending}
-                onNextPage={() => updateParams({ skip: String(skip + PAGE_SIZE) })}
-                onPreviousPage={() => updateParams({ skip: skip <= PAGE_SIZE ? null : String(skip - PAGE_SIZE) })}
+                pagination={paginationProps}
+                updating={listQuery.isFetching && !listQuery.isPending}
                 onRowClick={(row) => navigate(`/tenants/${row.id}`)}
               />
             </div>
             <div className="grid gap-2 md:hidden">
               {listQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل المستأجرين...</p>
-              ) : (listQuery.data ?? []).length === 0 ? (
+              ) : (pageData?.items ?? []).length === 0 ? (
                 <EmptyState
                   compact
                   action={
@@ -154,7 +161,7 @@ export function TenantsPage() {
                   title="لا يوجد مستأجرون"
                 />
               ) : null}
-              {(listQuery.data ?? []).map((tenant) => (
+              {(pageData?.items ?? []).map((tenant) => (
                 <Link
                   key={tenant.id}
                   className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover"
@@ -178,6 +185,7 @@ export function TenantsPage() {
                   </div>
                 </Link>
               ))}
+              {paginationProps ? <Pagination {...paginationProps} isFetching={listQuery.isFetching && !listQuery.isPending} /> : null}
             </div>
           </>
         )}

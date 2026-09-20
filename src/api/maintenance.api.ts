@@ -1,7 +1,7 @@
 import { apiClient } from "@/api/client";
 import { createResourceApi } from "@/api/resource.api";
-import { parseMaintenanceList, parseMaintenanceOut } from "@/lib/parsers";
-import type { Id, UnknownRecord } from "@/types/api";
+import { parseMaintenanceList, parseMaintenanceOut, parsePage } from "@/lib/parsers";
+import type { Id, PagedParams, UnknownRecord } from "@/types/api";
 import type { Assignment, MaintenanceCreate, MaintenanceListParams, MaintenanceTransition, MaintenanceUpdate } from "@/types/resources";
 
 const resource = createResourceApi<unknown, MaintenanceCreate, MaintenanceUpdate>("/maintenance/");
@@ -15,6 +15,9 @@ function parseOne(value: unknown) {
 export const maintenanceApi = {
   list(params?: MaintenanceListParams) {
     return apiClient.get<unknown>("/maintenance/", { params }).then((response) => parseMaintenanceList(response.data));
+  },
+  page(params: PagedParams<MaintenanceListParams>) {
+    return apiClient.get<unknown>("/maintenance/page", { params }).then((response) => parsePage(response.data, parseMaintenanceList));
   },
   get(id: number) {
     return apiClient.get<unknown>(`/maintenance/${id}`).then((response) => parseOne(response.data));

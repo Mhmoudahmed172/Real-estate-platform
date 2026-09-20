@@ -10,12 +10,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { propertyFormSchema, type PropertyFormValues } from "@/features/properties/propertySchema";
 import { applyApiFieldErrors } from "@/lib/formErrors";
 import { propertyStatusLabels, propertyTypeLabels } from "@/lib/labels";
-import { propertyStatuses, propertyTypes, type OwnerOut, type PropertyCreate, type PropertyOut } from "@/types/resources";
+import type { SelectOption } from "@/types/api";
+import { propertyStatuses, propertyTypes, type PropertyCreate, type PropertyOut } from "@/types/resources";
 
 type PropertyFormProps = {
   mode: "create" | "edit";
   defaultProperty?: PropertyOut;
-  owners: OwnerOut[];
+  owners: SelectOption[];
   onSubmit: (payload: PropertyCreate & { status?: PropertyOut["status"] | null }) => Promise<void>;
   onCancelHref?: string;
 };
@@ -111,7 +112,7 @@ export function PropertyForm({ mode, defaultProperty, owners, onSubmit, onCancel
                 <SelectItem value="none">بدون مالك</SelectItem>
                 {owners.map((owner) => (
                   <SelectItem key={owner.id} value={String(owner.id)}>
-                    {owner.full_name}
+                    {owner.label}
                   </SelectItem>
                 ))}
               </SelectContent>

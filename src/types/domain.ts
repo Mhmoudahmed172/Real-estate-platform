@@ -19,4 +19,6 @@ export type ReportParams = {
   date_from?: string | null;
   date_to?: string | null;
   property_id?: number | null;
+  page?: number;
+  page_size?: number;
 };

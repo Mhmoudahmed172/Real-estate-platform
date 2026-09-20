@@ -1,7 +1,7 @@
 import { apiClient } from "@/api/client";
 import { createResourceApi } from "@/api/resource.api";
-import { parseServiceList, parseServiceOut } from "@/lib/parsers";
-import type { Id } from "@/types/api";
+import { parsePage, parseServiceList, parseServiceOut } from "@/lib/parsers";
+import type { Id, PagedParams } from "@/types/api";
 import type { ServiceCreate, ServiceListParams, ServiceUpdate } from "@/types/resources";
 
 const resource = createResourceApi<unknown, ServiceCreate, ServiceUpdate>("/services/");
@@ -15,6 +15,9 @@ function parseOne(value: unknown) {
 export const servicesApi = {
   list(params?: ServiceListParams) {
     return apiClient.get<unknown>("/services/", { params }).then((response) => parseServiceList(response.data));
+  },
+  page(params: PagedParams<ServiceListParams>) {
+    return apiClient.get<unknown>("/services/page", { params }).then((response) => parsePage(response.data, parseServiceList));
   },
   get(id: Id) {
     return apiClient.get<unknown>(`/services/${id}`).then((response) => parseOne(response.data));

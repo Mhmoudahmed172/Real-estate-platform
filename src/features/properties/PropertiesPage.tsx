@@ -8,17 +8,17 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { Pagination } from "@/components/tables/Pagination";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { PropertyStatusBadge } from "@/components/ui/StatusBadge";
 import { useAuthorization } from "@/features/auth/useAuthorization";
-import { usePropertiesList } from "@/features/properties/useProperties";
+import { usePropertiesPage } from "@/features/properties/useProperties";
 import { propertyStatusLabels, propertyTypeLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
+import { readPageParams, writePageParams } from "@/lib/pagination";
 import { propertyStatuses, type PropertyOut, type PropertyStatus } from "@/types/resources";
-
-const PAGE_SIZE = 20;
 
 export function PropertiesPage() {
   const { can } = useAuthorization();
@@ -27,20 +27,28 @@ export function PropertiesPage() {
   const [city, setCity] = useState(searchParams.get("city") ?? "");
   const query = searchParams.get("q") ?? "";
   const status = (searchParams.get("status") as PropertyStatus | null) ?? null;
-  const skip = Number(searchParams.get("skip") ?? 0);
+  const pagination = readPageParams(searchParams);
 
   const params = useMemo(
     () => ({
       q: query || undefined,
       city: city || undefined,
       status_filter: status,
-      skip,
-      limit: PAGE_SIZE,
+      ...pagination,
     }),
-    [city, query, skip, status],
+    [city, pagination.page, pagination.page_size, query, status],
   );
 
-  const listQuery = usePropertiesList(params);
+  const listQuery = usePropertiesPage(params);
+  const pageData = listQuery.data;
+  const paginationProps = pageData ? {
+    page: pageData.page,
+    pageSize: pageData.page_size,
+    total: pageData.total,
+    totalPages: pageData.total_pages,
+    onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
+    onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
+  } : undefined;
 
   function updateParams(next: Record<string, string | null>) {
     const resolved = new URLSearchParams(searchParams);
@@ -49,7 +57,7 @@ export function PropertiesPage() {
       else resolved.delete(key);
     });
     if (next.q !== undefined || next.city !== undefined || next.status !== undefined) {
-      resolved.delete("skip");
+      resolved.delete("page");
     }
     setSearchParams(resolved);
   }
@@ -198,7 +206,7 @@ export function PropertiesPage() {
                   </>
                 )}
                 columns={columns}
-                data={listQuery.data ?? []}
+                data={pageData?.items ?? []}
                 emptyAction={
                   can("properties.create") ? (
                     <Button asChild size="sm">
@@ -209,18 +217,16 @@ export function PropertiesPage() {
                 emptyDescription="لا توجد عقارات مطابقة لعوامل التصفية الحالية."
                 emptyTitle="لا توجد عقارات"
                 getRowId={(row) => row.id}
-                hasMore={(listQuery.data?.length ?? 0) === PAGE_SIZE}
-                hasPrevious={skip > 0}
                 loading={listQuery.isPending}
-                onNextPage={() => updateParams({ skip: String(skip + PAGE_SIZE) })}
-                onPreviousPage={() => updateParams({ skip: skip <= PAGE_SIZE ? null : String(skip - PAGE_SIZE) })}
+                pagination={paginationProps}
+                updating={listQuery.isFetching && !listQuery.isPending}
                 onRowClick={(row) => navigate(`/properties/${row.id}`)}
               />
             </div>
             <div className="grid gap-2 md:hidden">
               {listQuery.isPending ? (
                 <p className="rounded-lg border border-border bg-card px-4 py-5 text-sm text-muted-foreground">جاري تحميل العقارات...</p>
-              ) : (listQuery.data ?? []).length === 0 ? (
+              ) : (pageData?.items ?? []).length === 0 ? (
                 <EmptyState
                   compact
                   action={
@@ -234,7 +240,7 @@ export function PropertiesPage() {
                   title="لا توجد عقارات"
                 />
               ) : null}
-              {(listQuery.data ?? []).map((property) => (
+              {(pageData?.items ?? []).map((property) => (
                 <Link
                   key={property.id}
                   className="rounded-xl border border-border bg-card p-4 shadow-card transition-all duration-fast hover:-translate-y-0.5 hover:shadow-card-hover"
@@ -257,6 +263,7 @@ export function PropertiesPage() {
                   <p className="mt-2 text-meta">{property.units_count} وحدة</p>
                 </Link>
               ))}
+              {paginationProps ? <Pagination {...paginationProps} isFetching={listQuery.isFetching && !listQuery.isPending} /> : null}
             </div>
           </>
         )}
