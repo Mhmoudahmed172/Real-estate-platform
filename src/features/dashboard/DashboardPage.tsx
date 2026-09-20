@@ -70,11 +70,6 @@ export function DashboardPage() {
             <DashboardSectionSkeleton />
           )}
         </section>
-        {viewModel.snapshotTruncated ? (
-          <p className="text-xs text-muted-foreground">
-            بعض المؤشرات محسوبة من أول 500 سجل لكل مورد لأن عقد القائمة لا يعيد إجمالي السجلات.
-          </p>
-        ) : null}
       </PageContainer>
     </motion.div>
   );

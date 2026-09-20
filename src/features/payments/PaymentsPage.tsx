@@ -27,7 +27,7 @@ export function PaymentsPage() {
   const dueFrom = searchParams.get("due_from") ?? "";
   const dueTo = searchParams.get("due_to") ?? "";
   const pagination = readPageParams(searchParams);
-  const params = useMemo(() => ({ contract_id: contractId, status_filter: status, due_from: dueFrom || null, due_to: dueTo || null, ...pagination }), [contractId, dueFrom, dueTo, pagination.page, pagination.page_size, status]);
+  const params = useMemo(() => ({ contract_id: contractId, status_filter: status, due_from: dueFrom || null, due_to: dueTo || null, page: pagination.page, page_size: pagination.page_size }), [contractId, dueFrom, dueTo, pagination.page, pagination.page_size, status]);
   const listQuery = usePaymentsPage(params);
   const pageData = listQuery.data;
   const paginationProps = pageData ? { page: pageData.page, pageSize: pageData.page_size, total: pageData.total, totalPages: pageData.total_pages, onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })), onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })) } : undefined;

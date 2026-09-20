@@ -26,7 +26,7 @@ export function MaintenancePage() {
   const status = (searchParams.get("status") as MaintenanceStatus | null) ?? null;
   const pagination = readPageParams(searchParams);
   const { propertiesQuery } = useMaintenanceOptions();
-  const params = useMemo(() => ({ property_id: propertyId, status_filter: status, ...pagination }), [pagination.page, pagination.page_size, propertyId, status]);
+  const params = useMemo(() => ({ property_id: propertyId, status_filter: status, page: pagination.page, page_size: pagination.page_size }), [pagination.page, pagination.page_size, propertyId, status]);
   const listQuery = useMaintenancePage(params);
   const pageData = listQuery.data;
   const paginationProps = pageData ? { page: pageData.page, pageSize: pageData.page_size, total: pageData.total, totalPages: pageData.total_pages, onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })), onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })) } : undefined;

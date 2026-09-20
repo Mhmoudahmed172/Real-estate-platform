@@ -38,7 +38,8 @@ export function UnitsPage() {
       status_filter: status,
       unit_type: unitType || undefined,
       property_id: propertyId,
-      ...pagination,
+      page: pagination.page,
+      page_size: pagination.page_size,
     }),
     [pagination.page, pagination.page_size, propertyId, query, status, unitType],
   );

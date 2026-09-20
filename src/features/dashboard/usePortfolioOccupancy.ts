@@ -1,11 +1,18 @@
 import { isForbiddenError } from "@/api/errors";
-import { useUnitsSnapshot } from "@/features/dashboard/useInventorySnapshot";
+import { dashboardApi } from "@/api/dashboard.api";
+import { useQuery } from "@tanstack/react-query";
+import { listQueryDefaults } from "@/app/providers/queryClient";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function usePortfolioOccupancy() {
-  const unitsQuery = useUnitsSnapshot();
-  if (unitsQuery.isError && isForbiddenError(unitsQuery.error)) return null;
-  const units = unitsQuery.data ?? [];
-  if (units.length === 0) return null;
-  const rented = units.filter((unit) => unit.status === "Rented").length;
-  return (rented / units.length) * 100;
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.resource("dashboard").detail("summary"),
+    queryFn: () => dashboardApi.summary(),
+    ...listQueryDefaults,
+    staleTime: 5 * 60_000,
+  });
+  if (summaryQuery.isError && isForbiddenError(summaryQuery.error)) return null;
+  const units = summaryQuery.data?.units;
+  if (!units || units.total === 0) return null;
+  return (units.rented / units.total) * 100;
 }

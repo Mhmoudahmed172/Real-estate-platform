@@ -23,7 +23,7 @@ export function TenantsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get("q") ?? "";
   const pagination = readPageParams(searchParams);
-  const params = useMemo(() => ({ q: query || undefined, ...pagination }), [pagination.page, pagination.page_size, query]);
+  const params = useMemo(() => ({ q: query || undefined, page: pagination.page, page_size: pagination.page_size }), [pagination.page, pagination.page_size, query]);
   const listQuery = useTenantsPage(params);
   const pageData = listQuery.data;
   const paginationProps = pageData ? {

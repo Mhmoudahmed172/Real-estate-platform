@@ -34,7 +34,8 @@ export function PropertiesPage() {
       q: query || undefined,
       city: city || undefined,
       status_filter: status,
-      ...pagination,
+      page: pagination.page,
+      page_size: pagination.page_size,
     }),
     [city, pagination.page, pagination.page_size, query, status],
   );

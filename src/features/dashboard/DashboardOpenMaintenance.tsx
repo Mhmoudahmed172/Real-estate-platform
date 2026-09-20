@@ -36,7 +36,7 @@ export function DashboardOpenMaintenance({ rows }: DashboardOpenMaintenanceProps
         </CardHeader>
         <CardContent className="space-y-2.5">
           {rows.length === 0 ? (
-            <EmptyState compact description="لا توجد بلاغات مفتوحة ضمن الصفحة المحمّلة." title="لا بلاغات مفتوحة" />
+            <EmptyState compact description="لا توجد بلاغات مفتوحة حاليًا." title="لا بلاغات مفتوحة" />
           ) : (
             rows.map((row) => (
               <div key={row.request.id} className="flex items-center gap-3 rounded-xl bg-muted/50 px-3 py-3">

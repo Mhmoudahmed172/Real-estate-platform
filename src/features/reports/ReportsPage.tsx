@@ -108,6 +108,14 @@ function summaryEntries(data: UnknownRecord | undefined): Array<[string, JsonVal
   return isRecord(summary) ? Object.entries(summary).slice(0, 4) : [];
 }
 
+function reportRowId(row: FlatRow, index: number): string | number {
+  for (const key of ["payment_id", "contract_id", "request_id"]) {
+    const value = row[key];
+    if (typeof value === "string" || typeof value === "number") return value;
+  }
+  return index;
+}
+
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -134,7 +142,8 @@ export function ReportsPage() {
     date_from: dateFrom || null,
     date_to: dateTo || null,
     property_id: propertyId ? Number(propertyId) : null,
-    ...pagination,
+    page: pagination.page,
+    page_size: pagination.page_size,
   }), [dateFrom, dateTo, pagination.page, pagination.page_size, propertyId]);
   const exportParams: ReportParams = useMemo(() => ({
     date_from: dateFrom || null,
@@ -284,7 +293,7 @@ export function ReportsPage() {
             <DataTable
               columns={columns}
               data={rows}
-              getRowId={(row) => String(row.payment_id ?? row.contract_id ?? row.request_id ?? rows.indexOf(row))}
+              getRowId={(row) => reportRowId(row, rows.indexOf(row))}
               loading={reportQuery.isPending}
               pagination={paginationProps}
               updating={reportQuery.isFetching && !reportQuery.isPending}

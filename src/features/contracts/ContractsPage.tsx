@@ -30,7 +30,7 @@ export function ContractsPage() {
   const { propertiesQuery, ownersQuery, tenantsQuery } = useContractOptions();
   const expiringQuery = useExpiringContracts(30);
 
-  const params = useMemo(() => ({ property_id: propertyId, owner_id: ownerId, tenant_id: tenantId, status_filter: status, ...pagination }), [ownerId, pagination.page, pagination.page_size, propertyId, status, tenantId]);
+  const params = useMemo(() => ({ property_id: propertyId, owner_id: ownerId, tenant_id: tenantId, status_filter: status, page: pagination.page, page_size: pagination.page_size }), [ownerId, pagination.page, pagination.page_size, propertyId, status, tenantId]);
   const listQuery = useContractsPage(params);
   const pageData = listQuery.data;
   const paginationProps = pageData ? { page: pageData.page, pageSize: pageData.page_size, total: pageData.total, totalPages: pageData.total_pages, onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })), onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })) } : undefined;
