@@ -33,6 +33,52 @@ const reportLabels: Record<ReportKind, { title: string; description: string }> =
   "maintenance-costs": { title: "تكاليف الصيانة", description: "تكاليف أعمال الصيانة المنفذة" },
 };
 
+const reportColumns: Record<ReportKind, string[]> = {
+  collections: [
+    "payment_id",
+    "receipt_number",
+    "property_name",
+    "unit_number",
+    "tenant_name",
+    "paid_date",
+    "amount_paid",
+    "status",
+  ],
+  outstanding: [
+    "payment_id",
+    "property_name",
+    "unit_number",
+    "tenant_name",
+    "due_date",
+    "amount_due",
+    "amount_paid",
+    "balance",
+    "status",
+  ],
+  "contract-expiries": [
+    "contract_id",
+    "property_name",
+    "unit_number",
+    "owner_name",
+    "tenant_name",
+    "start_date",
+    "end_date",
+    "rent_value",
+    "status",
+  ],
+  "maintenance-costs": [
+    "request_id",
+    "property_name",
+    "unit_number",
+    "vendor_name",
+    "issue_type",
+    "priority",
+    "status",
+    "cost",
+    "execution_date",
+  ],
+};
+
 const fieldLabels: Record<string, string> = {
   payment_count: "عدد الدفعات",
   total_collected: "إجمالي المحصل",
@@ -45,8 +91,13 @@ const fieldLabels: Record<string, string> = {
   total_rent_value: "إجمالي قيمة الإيجار",
   request_count: "عدد الطلبات",
   total_cost: "إجمالي التكلفة",
-  payment_id: "الدفعة",
-  contract_id: "العقد",
+  payment_id: "رقم الدفعة",
+  contract_id: "رقم العقد",
+  property_name: "العقار",
+  unit_number: "الوحدة",
+  tenant_name: "المستأجر",
+  owner_name: "المالك",
+  vendor_name: "المورد",
   property_id: "العقار",
   unit_id: "الوحدة",
   tenant_id: "المستأجر",
@@ -66,7 +117,7 @@ const fieldLabels: Record<string, string> = {
   rent_value: "قيمة الإيجار",
   deposit_amount: "التأمين",
   payment_frequency: "دورية الدفع",
-  request_id: "الطلب",
+  request_id: "رقم الطلب",
   issue_type: "نوع العطل",
   priority: "الأولوية",
   cost: "التكلفة",
@@ -159,7 +210,9 @@ export function ReportsPage() {
   });
   const rows = reportRows(reportQuery.data);
   const summary = summaryEntries(reportQuery.data);
-  const rowKeys = Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).slice(0, 8);
+  const rowKeys = reportColumns[kind].filter((key) =>
+    rows.some((row) => row[key] !== undefined),
+  );
   const total = Number(reportQuery.data?.total ?? 0);
   const page = Number(reportQuery.data?.page ?? pagination.page);
   const pageSize = Number(reportQuery.data?.page_size ?? pagination.page_size) as typeof pagination.page_size;
