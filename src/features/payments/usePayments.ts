@@ -54,6 +54,14 @@ export function usePaymentAdjustments(paymentId: Id | undefined) {
   });
 }
 
+export function usePaymentActivity(paymentId: Id | undefined) {
+  return useQuery({
+    queryKey: [...paymentsKeys.detail(paymentId ?? "unknown"), "activity"] as const,
+    queryFn: () => paymentsApi.activity(paymentId as Id),
+    enabled: paymentId !== undefined,
+  });
+}
+
 export function usePaymentMutations(paymentId?: Id, contractId?: Id) {
   const queryClient = useQueryClient();
   const invalidate = async () => {

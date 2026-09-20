@@ -21,7 +21,7 @@ export function OwnerCreatePage() {
       <PageContainer>
         <div className="mx-auto w-full max-w-[800px] space-y-6">
           <PageHeader
-            description="أدخل بيانات المالك ووسائل التواصل المتاحة في عقد الواجهة."
+            description="أدخل اسم المالك ووسائل التواصل ورقم الهوية."
             eyebrow="سجل حساب جديد"
             title="إضافة مالك"
           />

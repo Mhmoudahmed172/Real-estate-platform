@@ -1,4 +1,5 @@
 import { currentYearRangeLabel, formatMonthYear, parseMoney } from "@/lib/format";
+import { missingLabel } from "@/lib/display";
 import { propertyTypeLabels } from "@/lib/labels";
 import type {
   ContractOut,
@@ -16,6 +17,7 @@ export type DashboardKpi = {
   value: number | null;
   format: "number" | "percent" | "currency";
   mapped: boolean;
+  href?: string | null;
   footer: Array<{
     label: string;
     tone: "muted" | "success" | "danger" | "warning";
@@ -40,6 +42,7 @@ export type DashboardViewModel = {
   periodLabel: string;
   snapshotTruncated: boolean;
   kpis: DashboardKpi[];
+  secondaryKpis: DashboardKpi[];
   occupancyPercent: number | null;
   collections: CollectionPoint[];
   collectionsMapped: boolean;
@@ -143,6 +146,7 @@ export function buildDashboardViewModel(input: {
     collectionsMapped,
     portfolio,
     featuredProperty,
+    secondaryKpis: [],
     kpis: [
       {
         id: "properties",
@@ -190,16 +194,16 @@ export function buildDashboardViewModel(input: {
     ],
     expiringContracts: input.expiringContracts.slice(0, 4).map((contract) => ({
       contract,
-      tenantName: tenantsById.get(contract.tenant_id) ?? `مستأجر #${contract.tenant_id}`,
-      propertyName: propertiesById.get(contract.property_id) ?? `عقار #${contract.property_id}`,
-      unitLabel: unitsById.get(contract.unit_id) ?? `وحدة #${contract.unit_id}`,
+      tenantName: tenantsById.get(contract.tenant_id) ?? missingLabel("tenant"),
+      propertyName: propertiesById.get(contract.property_id) ?? missingLabel("property"),
+      unitLabel: unitsById.get(contract.unit_id) ?? missingLabel("unit"),
     })),
     openMaintenance: input.maintenance
       .filter((request) => OPEN_MAINTENANCE_STATUSES.has(request.status))
       .slice(0, 4)
       .map((request) => ({
         request,
-        propertyName: request.property_id ? (propertiesById.get(request.property_id) ?? `عقار #${request.property_id}`) : "غير مربوط",
+        propertyName: request.property_id ? (propertiesById.get(request.property_id) ?? missingLabel("property")) : "غير مربوط",
       })),
   };
 }

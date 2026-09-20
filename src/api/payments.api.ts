@@ -1,6 +1,7 @@
 import { apiClient } from "@/api/client";
 import { parsePage, parsePaymentList, parsePaymentOut } from "@/lib/parsers";
 import type { Id, PagedParams, UnknownRecord } from "@/types/api";
+import type { ActivityEntry } from "@/types/operations";
 import type { PaymentAdjustment, PaymentListParams, PaymentRecord } from "@/types/resources";
 
 export const paymentsApi = {
@@ -35,5 +36,8 @@ export const paymentsApi = {
   },
   adjustments(paymentId: Id) {
     return apiClient.get<UnknownRecord[]>(`/payments/${paymentId}/adjustments`).then((response) => response.data);
+  },
+  activity(paymentId: Id) {
+    return apiClient.get<ActivityEntry[]>(`/payments/${paymentId}/activity`).then((response) => response.data);
   },
 };

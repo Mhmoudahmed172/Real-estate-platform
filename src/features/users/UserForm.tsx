@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/Select";
 import { userFormSchema, type UserFormValues } from "@/features/users/userSchema";
 import { applyApiFieldErrors } from "@/lib/formErrors";
+import { formatDateTime } from "@/lib/format";
 import type { Role, User, UserCreate, UserUpdate } from "@/types/auth";
 
 type UserFormProps = {
@@ -62,7 +63,7 @@ export function UserForm({ mode, user, roles, rolesLoading = false, onSubmit, on
 
   return (
     <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-      <FormSection title="بيانات المستخدم" description="الحقول المطابقة لمخطط UserCreate و UserUpdate في OpenAPI.">
+      <FormSection title="بيانات المستخدم" description="أدخل بيانات الحساب والدور المطلوب.">
         <div className="grid gap-4 md:grid-cols-2">
           {isCreate ? (
             <FormField error={form.formState.errors.email?.message} htmlFor="user-email" label="البريد الإلكتروني" required>
@@ -104,6 +105,11 @@ export function UserForm({ mode, user, roles, rolesLoading = false, onSubmit, on
                   <SelectItem value="inactive">معطل</SelectItem>
                 </SelectContent>
               </Select>
+            </FormField>
+          ) : null}
+          {!isCreate ? (
+            <FormField htmlFor="user-last-login" label="آخر تسجيل دخول">
+              <Input disabled id="user-last-login" value={user?.last_login_at ? formatDateTime(user.last_login_at) : "لم يسجل الدخول بعد"} />
             </FormField>
           ) : null}
           <FormField error={form.formState.errors.password?.message} htmlFor="user-password" label={isCreate ? "كلمة المرور" : "كلمة مرور جديدة"} required={isCreate}>

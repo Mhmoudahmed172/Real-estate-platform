@@ -43,6 +43,14 @@ export function useOwnerContracts(ownerId: number | undefined) {
   });
 }
 
+export function useOwnerSummary(ownerId: number | undefined) {
+  return useQuery({
+    queryKey: [...ownersKeys.detail(ownerId ?? "unknown"), "summary"] as const,
+    queryFn: () => ownersApi.summary(ownerId as number),
+    enabled: typeof ownerId === "number",
+  });
+}
+
 export function useOwnerMutations() {
   const queryClient = useQueryClient();
 

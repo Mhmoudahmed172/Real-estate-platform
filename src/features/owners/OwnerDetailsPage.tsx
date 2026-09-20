@@ -1,21 +1,24 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Building2, Pencil, Trash2, UserRound } from "lucide-react";
+import { Building2, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
-import { Can } from "@/app/guards/Can";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
+import { DetailHeader } from "@/components/layout/DetailHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ContactLink } from "@/components/ui/ContactLink";
 import { ContractStatusBadge, PropertyStatusBadge } from "@/components/ui/StatusBadge";
-import { useOwner, useOwnerContracts, useOwnerMutations, useOwnerProperties } from "@/features/owners/useOwners";
-import { formatCurrency, formatDate, formatNumber, parseMoney } from "@/lib/format";
+import { useAuthorization } from "@/features/auth/useAuthorization";
+import { useOwner, useOwnerContracts, useOwnerMutations, useOwnerProperties, useOwnerSummary } from "@/features/owners/useOwners";
+import { formatDisplayText, formatIdentity } from "@/lib/display";
+import { formatCurrency, formatDate, formatMoney, formatNumber, formatPercent, parseMoney } from "@/lib/format";
 import { propertyTypeLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
 import type { ContractOut, PropertyOut } from "@/types/resources";
@@ -32,9 +35,11 @@ function MetaItem({ label, value }: { label: string; value: string }) {
 export function OwnerDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { can } = useAuthorization();
   const ownerId = Number(id);
   const validId = Number.isFinite(ownerId) ? ownerId : undefined;
   const ownerQuery = useOwner(validId);
+  const summaryQuery = useOwnerSummary(validId);
   const propertiesQuery = useOwnerProperties(validId);
   const contractsQuery = useOwnerContracts(validId);
   const { deleteMutation } = useOwnerMutations();
@@ -42,7 +47,8 @@ export function OwnerDetailsPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const owner = ownerQuery.data;
-  const totalUnits = (propertiesQuery.data ?? []).reduce((sum, property) => sum + property.units_count, 0);
+  const summary = summaryQuery.data;
+  const identity = formatIdentity(owner?.national_id);
 
   const propertyColumns: Array<DataTableColumn<PropertyOut>> = [
     {
@@ -65,7 +71,6 @@ export function OwnerDetailsPage() {
     { id: "status", header: "الحالة", cell: (row) => <PropertyStatusBadge status={row.status} /> },
   ];
   const contractColumns: Array<DataTableColumn<ContractOut>> = [
-    { id: "contract", header: "العقد", cell: (row) => `#${row.id}` },
     { id: "period", header: "الفترة", cell: (row) => `${formatDate(row.start_date)} - ${formatDate(row.end_date)}` },
     {
       id: "rent",
@@ -76,7 +81,7 @@ export function OwnerDetailsPage() {
         return amount == null ? row.rent_value : formatCurrency(amount);
       },
     },
-    { id: "status", header: "الحالة", cell: (row) => <ContractStatusBadge status={row.status} /> },
+    { id: "status", header: "الحالة", cell: (row) => <ContractStatusBadge endDate={row.end_date} status={row.status} /> },
   ];
 
   if (ownerQuery.isPending) {
@@ -92,11 +97,7 @@ export function OwnerDetailsPage() {
   if (ownerQuery.isError || !owner) {
     return (
       <PageContainer>
-        <ErrorState
-          description="تعذر تحميل تفاصيل المالك."
-          title="تعذر تحميل المالك"
-          onRetry={() => void ownerQuery.refetch()}
-        />
+        <ErrorState description="تعذر تحميل تفاصيل المالك." title="تعذر تحميل المالك" onRetry={() => void ownerQuery.refetch()} />
       </PageContainer>
     );
   }
@@ -114,86 +115,56 @@ export function OwnerDetailsPage() {
   return (
     <motion.div {...pageMotion}>
       <PageContainer>
-        <div>
-          <Button asChild className="mb-3 h-8 px-2 text-muted-foreground" size="sm" variant="ghost">
-            <Link to="/owners">
-              <ArrowRight aria-hidden="true" className="size-4" />
-              العودة إلى الملاك
-            </Link>
-          </Button>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex min-w-0 items-start gap-4">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <UserRound aria-hidden="true" className="size-6" />
-              </span>
-              <div className="min-w-0 space-y-2">
-                <p className="text-xs font-semibold text-primary">ملف المالك</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-page text-foreground">{owner.full_name}</h1>
-                  {owner.national_id ? <Badge variant="muted">{owner.national_id}</Badge> : null}
-                </div>
-                <p className="text-sm text-muted-foreground">{owner.email ?? owner.phone ?? "لا توجد بيانات تواصل"}</p>
-              </div>
+        <DetailHeader
+          backLabel="العودة إلى الملاك"
+          backTo="/owners"
+          badges={identity ? <Badge variant="muted">{identity}</Badge> : null}
+          description={
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <ContactLink type="phone" value={owner.phone} />
+              <ContactLink type="email" value={owner.email} />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Can permission="owners.update">
-                <Button asChild className="rounded-full" variant="outline">
-                  <Link to={`/owners/${owner.id}/edit`}>
-                    <Pencil aria-hidden="true" className="size-4" />
-                    تعديل
-                  </Link>
-                </Button>
-              </Can>
-              <Can permission="owners.delete">
-                <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                  <Trash2 aria-hidden="true" className="size-4" />
-                  حذف
-                </Button>
-              </Can>
-            </div>
-          </div>
-        </div>
+          }
+          eyebrow="ملف المالك"
+          icon={
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <UserRound aria-hidden="true" className="size-5" />
+            </span>
+          }
+          menuItems={can("owners.delete") ? [{ id: "delete", label: "حذف", destructive: true, onSelect: () => setConfirmOpen(true) }] : []}
+          primaryAction={
+            can("owners.update") ? (
+              <Button asChild className="rounded-full" variant="outline">
+                <Link to={`/owners/${owner.id}/edit`}>تعديل</Link>
+              </Button>
+            ) : null
+          }
+          title={owner.full_name}
+        />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="العقارات" value={propertiesQuery.isPending ? "..." : formatNumber((propertiesQuery.data ?? []).length)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="الوحدات عبر العقارات" value={propertiesQuery.isPending ? "..." : formatNumber(totalUnits)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="العقود المرتبطة" value={contractsQuery.isPending ? "..." : formatNumber((contractsQuery.data ?? []).length)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="المعرف" value={`#${owner.id}`} />
-            </CardContent>
-          </Card>
+          <Card><CardContent className="pt-4"><MetaItem label="عدد العقارات" value={summaryQuery.isPending ? "..." : formatNumber(summary?.total_properties ?? 0)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="عدد الوحدات" value={summaryQuery.isPending ? "..." : formatNumber(summary?.total_units ?? 0)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="نسبة الإشغال" value={summaryQuery.isPending ? "..." : formatPercent(summary?.occupancy_rate ?? 0)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="الإيجارات المتوقعة" value={summaryQuery.isPending ? "..." : formatMoney(summary?.expected_rent)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="المحصل" value={summaryQuery.isPending ? "..." : formatMoney(summary?.collected_rent)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="المتبقي" value={summaryQuery.isPending ? "..." : formatMoney(summary?.outstanding)} /></CardContent></Card>
+          <Card><CardContent className="pt-4"><MetaItem label="مصاريف الصيانة" value={summaryQuery.isPending ? "..." : formatMoney(summary?.maintenance_expenses)} /></CardContent></Card>
         </section>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle>بيانات التواصل</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <MetaItem label="الهاتف" value={owner.phone ?? "—"} />
-            <MetaItem label="البريد الإلكتروني" value={owner.email ?? "—"} />
-            <MetaItem label="رقم الهوية" value={owner.national_id ?? "—"} />
-            <MetaItem label="ملاحظات" value={owner.notes ?? "—"} />
-          </CardContent>
-        </Card>
+        {formatDisplayText(owner.notes) ? (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>ملاحظات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-6 text-foreground">{formatDisplayText(owner.notes)}</p>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <section className="space-y-3">
-          <div>
-            <h2 className="text-section text-foreground">العقارات المرتبطة</h2>
-            <p className="text-meta">عقارات المالك من endpoint الموثق.</p>
-          </div>
+          <h2 className="text-section text-foreground">العقارات المرتبطة</h2>
           {propertiesQuery.isError ? (
             <ErrorState compact description="تعذر تحميل عقارات المالك." title="تعذر تحميل العقارات" />
           ) : (
@@ -214,30 +185,39 @@ export function OwnerDetailsPage() {
         </section>
 
         <section className="space-y-3">
-          <div>
-            <h2 className="text-section text-foreground">العقود المرتبطة</h2>
-            <p className="text-meta">عرض قراءة فقط للعقود الموثقة للمالك دون تنفيذ Phase 4.</p>
-          </div>
+          <h2 className="text-section text-foreground">العقود المرتبطة</h2>
           {contractsQuery.isError ? (
             <ErrorState compact description="تعذر تحميل عقود المالك." title="تعذر تحميل العقود" />
           ) : (contractsQuery.data ?? []).length === 0 && !contractsQuery.isPending ? (
             <EmptyState compact description="لا توجد عقود مرتبطة بهذا المالك." title="لا توجد عقود" />
           ) : (
-            <DataTable columns={contractColumns} data={contractsQuery.data ?? []} getRowId={(row) => row.id} loading={contractsQuery.isPending} />
+            <DataTable
+              actions={(row) => (
+                <Button asChild className="rounded-full" size="sm" variant="ghost">
+                  <Link to={`/contracts/${row.id}`}>عرض</Link>
+                </Button>
+              )}
+              columns={contractColumns}
+              data={contractsQuery.data ?? []}
+              getRowId={(row) => row.id}
+              loading={contractsQuery.isPending}
+            />
           )}
         </section>
 
-        {deleteError ? <p className="text-xs text-destructive">{deleteError}</p> : null}
         <ConfirmDialog
-          description="سيتم حذف المالك إذا سمحت صلاحيات الخادم بذلك. لا يمكن التراجع عن هذا الإجراء من الواجهة."
+          confirmLabel="حذف المالك"
+          description={deleteError ?? `هل أنت متأكد من حذف المالك «${owner.full_name}»؟ لا يمكن التراجع عن هذا الإجراء.`}
           isLoading={deleteMutation.isPending}
           open={confirmOpen}
-          title={`حذف ${owner.full_name}؟`}
+          title="حذف المالك"
           onConfirm={() => void handleDelete()}
-          onOpenChange={setConfirmOpen}
+          onOpenChange={(open) => {
+            setConfirmOpen(open);
+            if (!open) setDeleteError(null);
+          }}
         />
       </PageContainer>
     </motion.div>
   );
 }
-

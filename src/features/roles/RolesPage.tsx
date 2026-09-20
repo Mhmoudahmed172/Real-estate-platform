@@ -9,6 +9,7 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
+import { ActionMenu } from "@/components/ui/ActionMenu";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useAuthorization } from "@/features/auth/useAuthorization";
@@ -106,9 +107,7 @@ export function RolesPage() {
         </Can>
         <Can permission="roles.delete">
           {row.is_system ? null : (
-            <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(row)}>
-              حذف
-            </Button>
+            <ActionMenu items={[{ id: "delete", label: "حذف", destructive: true, onSelect: () => setDeleteTarget(row) }]} />
           )}
         </Can>
       </>
@@ -205,7 +204,7 @@ export function RolesPage() {
         />
         <ConfirmDialog
           confirmLabel="حذف الدور"
-          description={deleteError ?? `سيتم حذف دور ${deleteTarget?.name ?? ""} إذا لم يكن مرتبطًا بمستخدمين.`}
+          description={deleteError ?? `هل أنت متأكد من حذف الدور «${deleteTarget?.name ?? ""}»؟`}
           isLoading={deleteMutation.isPending}
           open={deleteTarget !== null}
           title="حذف الدور"

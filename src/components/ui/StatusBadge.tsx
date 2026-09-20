@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/Badge";
 import {
+  CONTRACT_EXPIRING_SOON_LABEL,
   contractStatusLabels,
+  isContractExpiringSoon,
   maintenancePriorityLabels,
   maintenanceStatusLabels,
   paymentStatusLabels,
@@ -66,7 +68,16 @@ export function UnitStatusBadge({ status }: { status: UnitStatus }) {
   return <Badge variant={unitVariants[status]}>{unitStatusLabels[status]}</Badge>;
 }
 
-export function ContractStatusBadge({ status }: { status: ContractStatus }) {
+export function ContractStatusBadge({
+  status,
+  endDate,
+}: {
+  status: ContractStatus;
+  endDate?: string | null;
+}) {
+  if (isContractExpiringSoon(status, endDate)) {
+    return <Badge variant="warning">{CONTRACT_EXPIRING_SOON_LABEL}</Badge>;
+  }
   return <Badge variant={contractVariants[status]}>{contractStatusLabels[status]}</Badge>;
 }
 

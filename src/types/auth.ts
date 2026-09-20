@@ -11,6 +11,7 @@ export type User = {
   is_superuser: boolean;
   role?: Role | null;
   permissions?: string[];
+  last_login_at?: string | null;
 };
 
 export type UserCreate = {

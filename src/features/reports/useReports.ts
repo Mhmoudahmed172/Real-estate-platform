@@ -1,10 +1,15 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { reportsApi } from "@/api/reports.api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { ReportKind, ReportParams } from "@/types/domain";
 
-export function useReport(kind: ReportKind, params: ReportParams) {
-  return useQuery({ queryKey: queryKeys.reports.detail(kind, params), queryFn: () => reportsApi.get(kind, params) });
+export function useReport(kind: ReportKind, params: ReportParams, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.reports.detail(kind, params),
+    queryFn: () => reportsApi.get(kind, params),
+    enabled,
+    placeholderData: keepPreviousData,
+  });
 }
 
 export function useReportExport() {

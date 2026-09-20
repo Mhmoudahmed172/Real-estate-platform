@@ -28,6 +28,9 @@ export const queryKeys = {
   reports: {
     detail: (kind: ReportKind, params?: unknown) => ["reports", kind, params] as const,
   },
+  audit: {
+    list: (entityType: string, entityId: Id) => ["audit-events", entityType, entityId] as const,
+  },
   roles: {
     all: ["roles"] as const,
     list: () => ["roles", "list"] as const,

@@ -1,6 +1,6 @@
 import { apiClient } from "@/api/client";
 import { createResourceApi } from "@/api/resource.api";
-import { parseMaintenanceList, parsePage, parseVendorList, parseVendorOut } from "@/lib/parsers";
+import { parseMaintenanceList, parsePage, parseVendorList, parseVendorOut, parseVendorStats } from "@/lib/parsers";
 import type { Id, PagedParams, SelectOption } from "@/types/api";
 import type { VendorCreate, VendorListParams, VendorUpdate } from "@/types/resources";
 
@@ -36,5 +36,12 @@ export const vendorsApi = {
   },
   maintenance(vendorId: number) {
     return apiClient.get<unknown>(`/vendors/${vendorId}/maintenance`).then((response) => parseMaintenanceList(response.data));
+  },
+  stats(vendorId: number) {
+    return apiClient.get<unknown>(`/vendors/${vendorId}/stats`).then((response) => {
+      const stats = parseVendorStats(response.data);
+      if (!stats) throw new Error("تعذر قراءة إحصاءات المورد.");
+      return stats;
+    });
   },
 };

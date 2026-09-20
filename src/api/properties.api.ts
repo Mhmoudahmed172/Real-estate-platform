@@ -36,7 +36,7 @@ export const propertiesApi = {
   summary(propertyId: number) {
     return apiClient.get<unknown>(`/properties/${propertyId}/summary`).then((response) => response.data);
   },
-  units(propertyId: number) {
-    return apiClient.get<unknown>(`/properties/${propertyId}/units`).then((response) => parseUnitList(response.data));
+  units(propertyId: number, params?: { status_filter?: string; available_for_contract?: boolean }) {
+    return apiClient.get<unknown>(`/properties/${propertyId}/units`, { params }).then((response) => parseUnitList(response.data));
   },
 };

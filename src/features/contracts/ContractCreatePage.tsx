@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -14,6 +14,9 @@ import type { ContractCreate, PaymentOut } from "@/types/resources";
 
 export function ContractCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialPropertyId = Number(searchParams.get("property_id")) || undefined;
+  const initialUnitId = Number(searchParams.get("unit_id")) || undefined;
   const { propertiesQuery, ownersQuery, tenantsQuery } = useContractOptions();
   const { createMutation, previewMutation } = useContractMutations();
   const [preview, setPreview] = useState<PaymentOut[]>([]);
@@ -36,9 +39,9 @@ export function ContractCreatePage() {
 
   const failed = propertiesQuery.isError || ownersQuery.isError || tenantsQuery.isError;
   return <motion.div {...pageMotion}><PageContainer>
-    <PageHeader eyebrow="العقود" title="إنشاء عقد" description="إنشاء عقد جديد باستخدام ContractCreate ومعاينة جدول الدفعات من backend قبل الحفظ." />
+    <PageHeader eyebrow="العقود" title="إنشاء عقد" description="إنشاء عقد جديد ومعاينة جدول الدفعات قبل الحفظ." />
     {failed ? <ErrorState title="تعذر تحميل بيانات النموذج" description="تحتاج صفحة العقد إلى العقارات والملاك والمستأجرين." onRetry={() => { void propertiesQuery.refetch(); void ownersQuery.refetch(); void tenantsQuery.refetch(); }} /> : <>
-      <ContractForm mode="create" properties={propertiesQuery.data ?? []} owners={ownersQuery.data ?? []} tenants={tenantsQuery.data ?? []} onSubmit={(payload) => submit(payload as ContractCreate)} onPreview={previewSchedule} previewLoading={previewMutation.isPending} onCancelHref="/contracts" />
+      <ContractForm initialPropertyId={initialPropertyId} initialUnitId={initialUnitId} mode="create" properties={propertiesQuery.data ?? []} owners={ownersQuery.data ?? []} tenants={tenantsQuery.data ?? []} onSubmit={(payload) => submit(payload as ContractCreate)} onPreview={previewSchedule} previewLoading={previewMutation.isPending} onCancelHref="/contracts" />
       {preview.length > 0 ? <section className="space-y-3"><h2 className="text-section text-foreground">معاينة جدول الدفعات</h2><DataTable columns={columns} data={preview} getRowId={(row) => row.id} emptyTitle="لا توجد دفعات في المعاينة" /></section> : null}
     </>}
   </PageContainer></motion.div>;

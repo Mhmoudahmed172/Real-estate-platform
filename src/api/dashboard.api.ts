@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import type { DashboardKpis } from "@/types/operations";
 import type { ContractOut, MaintenanceOut, PropertyOut, PropertyType } from "@/types/resources";
 
 export type DashboardSummaryResponse = {
@@ -30,6 +31,7 @@ export type DashboardSummaryResponse = {
     request: MaintenanceOut;
     property_name: string;
   }>;
+  kpis?: DashboardKpis;
 };
 
 export const dashboardApi = {

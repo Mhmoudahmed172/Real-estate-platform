@@ -35,6 +35,14 @@ export function useTenantContracts(tenantId: number | undefined) {
   });
 }
 
+export function useTenantSummary(tenantId: number | undefined) {
+  return useQuery({
+    queryKey: [...tenantsKeys.detail(tenantId ?? "unknown"), "summary"] as const,
+    queryFn: () => tenantsApi.summary(tenantId as number),
+    enabled: typeof tenantId === "number",
+  });
+}
+
 export function useTenantMutations() {
   const queryClient = useQueryClient();
 

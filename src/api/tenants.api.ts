@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { parseContractList, parsePage, parseTenantList, parseTenantOut } from "@/lib/parsers";
+import { parseContractList, parsePage, parseTenantList, parseTenantOut, parseTenantSummary } from "@/lib/parsers";
 import type { Id, PagedParams, SelectOption, UnknownRecord } from "@/types/api";
 import type { TenantCreate, TenantListParams, TenantUpdate } from "@/types/resources";
 
@@ -45,5 +45,12 @@ export const tenantsApi = {
   },
   balance(tenantId: number) {
     return apiClient.get<UnknownRecord>(`/tenants/${tenantId}/balance`).then((response) => response.data);
+  },
+  summary(tenantId: number) {
+    return apiClient.get<unknown>(`/tenants/${tenantId}/summary`).then((response) => {
+      const summary = parseTenantSummary(response.data);
+      if (!summary) throw new Error("تعذر قراءة ملخص المستأجر.");
+      return summary;
+    });
   },
 };

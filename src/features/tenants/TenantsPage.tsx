@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useTenantsPage } from "@/features/tenants/useTenants";
+import { ContactLink } from "@/components/ui/ContactLink";
+import { formatIdentity } from "@/lib/display";
 import { pageMotion } from "@/lib/motion";
 import { readPageParams, writePageParams } from "@/lib/pagination";
 import type { TenantOut } from "@/types/resources";
@@ -56,14 +58,14 @@ export function TenantsPage() {
           </span>
           <div className="min-w-0">
             <p className="font-semibold text-foreground">{row.full_name}</p>
-            <p className="text-meta">{row.national_id ?? "بدون رقم هوية"}</p>
+            <p className="text-meta">{formatIdentity(row.national_id) ?? "بدون رقم هوية"}</p>
           </div>
         </div>
       ),
     },
-    { id: "phone", header: "الهاتف", cell: (row) => row.phone ?? "—" },
-    { id: "email", header: "البريد", cell: (row) => row.email ?? "—" },
-    { id: "national_id", header: "الهوية", cell: (row) => row.national_id ?? "—" },
+    { id: "phone", header: "الهاتف", cell: (row) => <ContactLink type="phone" value={row.phone} /> },
+    { id: "email", header: "البريد", cell: (row) => <ContactLink type="email" value={row.email} /> },
+    { id: "national_id", header: "الهوية", cell: (row) => formatIdentity(row.national_id) ?? "—" },
   ];
 
   return (
@@ -80,7 +82,7 @@ export function TenantsPage() {
               </Button>
             </Can>
           }
-          description="إدارة بيانات المستأجرين ووسائل التواصل حسب الحقول الموثقة."
+          description="إدارة بيانات المستأجرين ووسائل التواصل."
           eyebrow="إدارة الحسابات"
           title="المستأجرون"
         />

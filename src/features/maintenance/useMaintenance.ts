@@ -27,6 +27,10 @@ export function useMaintenanceHistory(id: Id | undefined) {
   return useQuery({ queryKey: [...maintenanceKeys.detail(id ?? "unknown"), "history"] as const, queryFn: () => maintenanceApi.history(Number(id)), enabled: id !== undefined });
 }
 
+export function useMaintenanceTimeline(id: Id | undefined) {
+  return useQuery({ queryKey: [...maintenanceKeys.detail(id ?? "unknown"), "timeline"] as const, queryFn: () => maintenanceApi.timeline(Number(id)), enabled: id !== undefined });
+}
+
 export function useMaintenanceOptions() {
   const propertiesQuery = useQuery({ queryKey: [...queryKeys.properties.all, "options"], queryFn: () => propertiesApi.options({ limit: 50 }) });
   const vendorsQuery = useQuery({ queryKey: [...vendorsKeys.all, "options"], queryFn: () => vendorsApi.options({ limit: 50 }) });

@@ -122,7 +122,7 @@ export function PropertiesPage() {
               </Button>
             </Can>
           }
-          description="بحث وتصنيف العقارات حسب الحالة والمدينة من عقد القائمة الحالي."
+          description="بحث وتصنيف العقارات حسب الحالة والمدينة."
           eyebrow="إدارة المحفظة"
           title="العقارات"
         />

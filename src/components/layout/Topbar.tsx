@@ -7,6 +7,7 @@ import { Can } from "@/app/guards/Can";
 import { navigationItems } from "@/app/router/routes";
 import { useAuth } from "@/features/auth/useAuth";
 import { BRAND_NAME } from "@/lib/brand";
+import { roleDisplayLabel } from "@/lib/labels";
 
 type TopbarProps = {
   onOpenSidebar: () => void;
@@ -16,7 +17,7 @@ function currentPageTitle(pathname: string) {
   const match = navigationItems
     .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
     .sort((left, right) => right.href.length - left.href.length)[0];
-  return match?.labelAr ?? BRAND_NAME;
+  return match?.label ?? BRAND_NAME;
 }
 
 export function Topbar({ onOpenSidebar }: TopbarProps) {
@@ -25,7 +26,7 @@ export function Topbar({ onOpenSidebar }: TopbarProps) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const displayName = user?.full_name ?? user?.email ?? "المستخدم";
-  const roleLabel = user?.role?.name ?? (user?.is_superuser ? "superuser" : "حساب");
+  const roleLabel = roleDisplayLabel(user?.role?.name, Boolean(user?.is_superuser));
   const initial = displayName.trim().slice(0, 1) || "م";
   const pageTitle = currentPageTitle(location.pathname);
 

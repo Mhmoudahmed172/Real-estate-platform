@@ -1,17 +1,97 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Can } from "@/app/guards/Can";
+import { normalizeApiError } from "@/api/errors";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { LoadingState } from "@/components/feedback/LoadingState";
+import { DetailGrid, DetailItem } from "@/components/layout/DetailGrid";
+import { DetailHeader } from "@/components/layout/DetailHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { ContactLink } from "@/components/ui/ContactLink";
+import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useService, useServiceMutations, useServiceRelations } from "@/features/services/useServices";
+import { relationLabel } from "@/lib/display";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { pageMotion } from "@/lib/motion";
 
-function DetailItem({ label, value }: { label: string; value: string | number | null | undefined }) { return <div className="rounded-xl border border-border bg-muted/30 px-4 py-3"><p className="text-meta">{label}</p><p className="mt-1 font-medium text-foreground">{value ?? "—"}</p></div>; }
-export function ServiceDetailsPage() { const { id } = useParams(); const navigate = useNavigate(); const serviceId = id ? Number(id) : undefined; const serviceQuery = useService(serviceId); const relations = useServiceRelations(serviceQuery.data); const { deleteMutation } = useServiceMutations(); const [deleteOpen, setDeleteOpen] = useState(false); if (serviceQuery.isPending) return <LoadingState label="جاري تحميل الخدمة" />; if (serviceQuery.isError || !serviceQuery.data) return <ErrorState title="تعذر تحميل الخدمة" description="لم نتمكن من تحميل تفاصيل الخدمة." onRetry={() => void serviceQuery.refetch()} />; const service = serviceQuery.data; return <motion.div {...pageMotion}><PageContainer><PageHeader eyebrow="الخدمات" title={service.service_name} description="تفاصيل الخدمة والعلاقات المدعومة." actions={<div className="flex flex-wrap gap-2"><Can permission="services.update"><Button asChild className="rounded-full" variant="outline"><Link to={`/services/${service.id}/edit`}>تعديل</Link></Button></Can><Can permission="services.delete"><Button className="rounded-full" variant="destructive" onClick={() => setDeleteOpen(true)}>حذف</Button></Can></div>} /><Card><CardHeader><CardTitle>بيانات الخدمة</CardTitle></CardHeader><CardContent><div className="grid gap-3 md:grid-cols-2"><DetailItem label="العقار" value={relations.propertyQuery.data?.name ?? `#${service.property_id}`} /><DetailItem label="المورد" value={relations.providerQuery.data?.name ?? (service.provider_id ? `#${service.provider_id}` : null)} /><DetailItem label="التكلفة" value={service.cost == null ? null : formatCurrency(service.cost)} /><DetailItem label="تاريخ الاستحقاق" value={service.due_date ? formatDate(service.due_date) : null} /></div></CardContent></Card><ConfirmDialog open={deleteOpen} title="حذف الخدمة" description="سيتم حذف الخدمة عبر DELETE /services/{service_id}." confirmLabel="حذف الخدمة" isLoading={deleteMutation.isPending} onOpenChange={setDeleteOpen} onConfirm={() => void deleteMutation.mutateAsync(service.id).then(() => navigate("/services"))} /></PageContainer></motion.div>; }
+export function ServiceDetailsPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { can } = useAuthorization();
+  const serviceId = id ? Number(id) : undefined;
+  const serviceQuery = useService(serviceId);
+  const relations = useServiceRelations(serviceQuery.data);
+  const { deleteMutation } = useServiceMutations();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  if (serviceQuery.isPending) return <LoadingState label="جاري تحميل الخدمة" />;
+  if (serviceQuery.isError || !serviceQuery.data) {
+    return <ErrorState description="لم نتمكن من تحميل تفاصيل الخدمة." title="تعذر تحميل الخدمة" onRetry={() => void serviceQuery.refetch()} />;
+  }
+
+  const service = serviceQuery.data;
+  const vendor = relations.providerQuery.data;
+  const propertyName = relationLabel(relations.propertyQuery.data?.name, "property");
+
+  async function handleDelete() {
+    try {
+      await deleteMutation.mutateAsync(service.id);
+      navigate("/services");
+    } catch (error) {
+      setDeleteError(normalizeApiError(error).message);
+    }
+  }
+
+  return (
+    <motion.div {...pageMotion}>
+      <PageContainer>
+        <DetailHeader
+          backLabel="العودة إلى الخدمات"
+          backTo="/services"
+          description={propertyName}
+          eyebrow="الخدمات"
+          menuItems={can("services.delete") ? [{ id: "delete", label: "حذف", destructive: true, onSelect: () => setDeleteOpen(true) }] : []}
+          primaryAction={
+            can("services.update") ? (
+              <Button asChild className="rounded-full" variant="outline">
+                <Link to={`/services/${service.id}/edit`}>تعديل</Link>
+              </Button>
+            ) : null
+          }
+          title={service.service_name}
+        />
+        <Card>
+          <CardHeader>
+            <CardTitle>بيانات الخدمة</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DetailGrid>
+              <DetailItem label="العقار" value={propertyName} />
+              <DetailItem label="المورد" value={service.provider_id ? relationLabel(vendor?.name, "vendor") : "بدون مورد"} />
+              <DetailItem label="هاتف المورد" value={vendor?.phone ? <ContactLink type="phone" value={vendor.phone} /> : "—"} />
+              <DetailItem label="بريد المورد" value={vendor?.email ? <ContactLink type="email" value={vendor.email} /> : "—"} />
+              <DetailItem important label="التكلفة" value={service.cost == null ? null : formatCurrency(service.cost)} />
+              <DetailItem label="تاريخ الاستحقاق" value={service.due_date ? formatDate(service.due_date) : null} />
+            </DetailGrid>
+          </CardContent>
+        </Card>
+        <ConfirmDialog
+          confirmLabel="حذف الخدمة"
+          description={deleteError ?? `هل أنت متأكد من حذف الخدمة «${service.service_name}»؟`}
+          isLoading={deleteMutation.isPending}
+          open={deleteOpen}
+          title="حذف الخدمة"
+          onConfirm={() => void handleDelete()}
+          onOpenChange={(open) => {
+            setDeleteOpen(open);
+            if (!open) setDeleteError(null);
+          }}
+        />
+      </PageContainer>
+    </motion.div>
+  );
+}

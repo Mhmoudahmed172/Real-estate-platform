@@ -1,11 +1,28 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia(DESKTOP_QUERY).matches);
+
+  useEffect(() => {
+    const media = window.matchMedia(DESKTOP_QUERY);
+    function sync(event?: MediaQueryListEvent) {
+      const matches = event?.matches ?? media.matches;
+      setIsDesktop(matches);
+      if (matches) setSidebarOpen(false);
+    }
+    sync();
+    media.addEventListener("change", sync);
+    return () => media.removeEventListener("change", sync);
+  }, []);
+
+  const showMobileSidebar = sidebarOpen && !isDesktop;
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -15,11 +32,11 @@ export function AppShell() {
       >
         تخطي إلى المحتوى
       </a>
-      <div className="hidden lg:fixed lg:inset-y-0 lg:right-0 lg:z-40 lg:block">
-        <Sidebar />
+      <div className="hidden lg:fixed lg:inset-y-0 lg:right-0 lg:z-40 lg:flex lg:h-dvh lg:w-sidebar">
+        {isDesktop ? <Sidebar /> : null}
       </div>
       <AnimatePresence>
-        {sidebarOpen ? (
+        {showMobileSidebar ? (
           <motion.div
             className="fixed inset-0 z-50 lg:hidden"
             initial={{ opacity: 0 }}
@@ -34,7 +51,7 @@ export function AppShell() {
               onClick={() => setSidebarOpen(false)}
             />
             <motion.div
-              className="absolute inset-y-0 right-0"
+              className="absolute inset-y-0 right-0 h-dvh"
               initial={{ x: 272 }}
               animate={{ x: 0 }}
               exit={{ x: 272 }}

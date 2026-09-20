@@ -15,7 +15,7 @@ export const Card = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>((
 Card.displayName = "Card";
 
 export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div className={cn("space-y-1.5 p-5 pb-4 sm:p-6 sm:pb-5", className)} ref={ref} {...props} />
+  <div className={cn("space-y-1 p-4 pb-3 sm:p-5 sm:pb-4", className)} ref={ref} {...props} />
 ));
 CardHeader.displayName = "CardHeader";
 
@@ -27,6 +27,6 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
 CardTitle.displayName = "CardTitle";
 
 export const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div className={cn("p-5 pt-0 sm:p-6 sm:pt-0", className)} ref={ref} {...props} />
+  <div className={cn("p-4 pt-0 sm:p-5 sm:pt-0", className)} ref={ref} {...props} />
 ));
 CardContent.displayName = "CardContent";

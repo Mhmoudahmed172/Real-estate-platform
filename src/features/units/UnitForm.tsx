@@ -59,7 +59,7 @@ export function UnitForm({ mode, defaultUnit, properties, onSubmit, onCancelHref
 
   return (
     <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-      <FormSection description="رقم الوحدة والعقار المرتبطة به كما يطلبهما عقد الإنشاء." title="البيانات الأساسية">
+      <FormSection description="أدخل رقم الوحدة واختر العقار المرتبط." title="البيانات الأساسية">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.unit_number?.message} htmlFor="unit-number" label="رقم الوحدة" required>
             <Input id="unit-number" {...form.register("unit_number")} />
@@ -84,7 +84,7 @@ export function UnitForm({ mode, defaultUnit, properties, onSubmit, onCancelHref
         </div>
       </FormSection>
 
-      <FormSection description="مواصفات الوحدة المتاحة في OpenAPI." title="مواصفات الوحدة">
+      <FormSection description="أدخل نوع الوحدة والدور والمساحة وعدد الغرف." title="مواصفات الوحدة">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.unit_type?.message} htmlFor="unit-type" label="نوع الوحدة">
             <Input id="unit-type" {...form.register("unit_type")} />
@@ -101,7 +101,7 @@ export function UnitForm({ mode, defaultUnit, properties, onSubmit, onCancelHref
         </div>
       </FormSection>
 
-      <FormSection description="قيمة الإيجار مطلوبة حسب عقد إنشاء الوحدة." title="التشغيل والإيجار">
+      <FormSection description="أدخل قيمة الإيجار وحالة الوحدة." title="التشغيل والإيجار">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.rent_value?.message} htmlFor="unit-rent" label="قيمة الإيجار" required>
             <Input id="unit-rent" inputMode="decimal" step="0.01" type="number" {...form.register("rent_value")} />

@@ -10,11 +10,14 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { DataTable, type DataTableColumn } from "@/components/tables/DataTable";
 import { Pagination } from "@/components/tables/Pagination";
+import { ActionMenu } from "@/components/ui/ActionMenu";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useAuthorization } from "@/features/auth/useAuthorization";
 import { useUserMutations, useUsersPage } from "@/features/users/useUsers";
 import { normalizeApiError } from "@/api/errors";
+import { roleDisplayLabel } from "@/lib/labels";
+import { formatDateTime } from "@/lib/format";
 import { pageMotion } from "@/lib/motion";
 import { readPageParams, writePageParams } from "@/lib/pagination";
 import type { User } from "@/types/auth";
@@ -25,8 +28,7 @@ function UserStatusBadge({ user }: { user: User }) {
 }
 
 function UserRoleBadge({ user }: { user: User }) {
-  if (user.is_superuser) return <Badge variant="warning">Superuser</Badge>;
-  return <Badge variant="default">{user.role?.name ?? "بدون دور"}</Badge>;
+  return <Badge variant={user.is_superuser ? "warning" : "default"}>{roleDisplayLabel(user.role?.name, user.is_superuser)}</Badge>;
 }
 
 export function UsersPage() {
@@ -44,9 +46,22 @@ export function UsersPage() {
     onPageChange: (page: number) => setSearchParams(writePageParams(searchParams, { page })),
     onPageSizeChange: (page_size: typeof pageData.page_size) => setSearchParams(writePageParams(searchParams, { page_size })),
   } : undefined;
-  const { deleteMutation } = useUserMutations();
+  const { deleteMutation, updateMutation } = useUserMutations();
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<User | null>(null);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
+
+  async function confirmDeactivate() {
+    if (!deactivateTarget) return;
+    setDeactivateError(null);
+    try {
+      await updateMutation.mutateAsync({ id: deactivateTarget.id, payload: { is_active: false } });
+      setDeactivateTarget(null);
+    } catch (error) {
+      setDeactivateError(normalizeApiError(error).message);
+    }
+  }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -80,7 +95,7 @@ export function UsersPage() {
     },
     { id: "role", header: "الدور", cell: (row) => <UserRoleBadge user={row} /> },
     { id: "status", header: "الحالة", cell: (row) => <UserStatusBadge user={row} /> },
-    { id: "id", header: "المعرف", numeric: true, cell: (row) => row.id },
+    { id: "lastLogin", header: "آخر تسجيل دخول", cell: (row) => row.last_login_at ? formatDateTime(row.last_login_at) : "لم يسجل الدخول بعد" },
   ];
 
   return (
@@ -136,11 +151,10 @@ export function UsersPage() {
                         <Link to={`/users/${row.id}/edit`}>تعديل</Link>
                       </Button>
                     </Can>
-                    <Can permission="users.delete">
-                      <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(row)}>
-                        حذف
-                      </Button>
-                    </Can>
+                    <ActionMenu items={[
+                      ...(can("users.update") && row.is_active ? [{ id: "deactivate", label: "تعطيل الحساب", onSelect: () => setDeactivateTarget(row) }] : []),
+                      ...(can("users.delete") ? [{ id: "delete", label: "حذف", destructive: true, onSelect: () => setDeleteTarget(row) }] : []),
+                    ]} />
                   </>
                 )}
                 columns={columns}
@@ -167,6 +181,7 @@ export function UsersPage() {
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground">{user.full_name || user.email}</p>
                       <p className="mt-1 font-numeric text-meta">{user.email}</p>
+                      <p className="mt-1 text-meta">{user.last_login_at ? formatDateTime(user.last_login_at) : "لم يسجل الدخول بعد"}</p>
                     </div>
                     <UserStatusBadge user={user} />
                   </div>
@@ -176,9 +191,10 @@ export function UsersPage() {
                       <Can permission="users.update">
                         <Button asChild className="rounded-full" size="sm" variant="outline"><Link to={`/users/${user.id}/edit`}>تعديل</Link></Button>
                       </Can>
-                      <Can permission="users.delete">
-                        <Button className="rounded-full" size="sm" variant="destructive" onClick={() => setDeleteTarget(user)}>حذف</Button>
-                      </Can>
+                      <ActionMenu items={[
+                        ...(can("users.update") && user.is_active ? [{ id: "deactivate", label: "تعطيل الحساب", onSelect: () => setDeactivateTarget(user) }] : []),
+                        ...(can("users.delete") ? [{ id: "delete", label: "حذف", destructive: true, onSelect: () => setDeleteTarget(user) }] : []),
+                      ]} />
                     </div>
                   </div>
                 </div>
@@ -188,9 +204,18 @@ export function UsersPage() {
           </>
         )}
         <ConfirmDialog
+          open={deactivateTarget !== null}
+          title="تعطيل المستخدم"
+          description={deactivateError ?? `هل تريد تعطيل حساب «${deactivateTarget?.full_name || deactivateTarget?.email || "المستخدم"}»؟ يمكن إعادة تفعيله لاحقًا.`}
+          confirmLabel="تعطيل الحساب"
+          isLoading={updateMutation.isPending}
+          onOpenChange={(open) => { if (!open) { setDeactivateTarget(null); setDeactivateError(null); } }}
+          onConfirm={() => void confirmDeactivate()}
+        />
+        <ConfirmDialog
           open={deleteTarget !== null}
           title="حذف المستخدم"
-          description={deleteError ?? `سيتم حذف حساب ${deleteTarget?.email ?? "المستخدم"} عبر DELETE /users/{user_id}.`}
+          description={deleteError ?? `هل أنت متأكد من حذف المستخدم «${deleteTarget?.full_name || deleteTarget?.email || "المستخدم"}»؟`}
           confirmLabel="حذف المستخدم"
           isLoading={deleteMutation.isPending}
           onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteError(null); } }}

@@ -9,7 +9,7 @@ const optionalText = z.preprocess((value) => (value === "" ? null : value), z.st
 export const contractFormSchema = z.object({
   property_id: requiredNumber("العقار"),
   unit_id: requiredNumber("الوحدة"),
-  owner_id: requiredNumber("المالك"),
+  owner_id: z.coerce.number({ message: "المالك مطلوب" }).int().nonnegative().optional(),
   tenant_id: requiredNumber("المستأجر"),
   start_date: z.string().min(1, "تاريخ البداية مطلوب"),
   end_date: z.string().min(1, "تاريخ النهاية مطلوب"),

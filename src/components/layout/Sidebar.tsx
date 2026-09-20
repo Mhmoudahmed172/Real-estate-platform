@@ -19,11 +19,11 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const visibleItems = navigationItems.filter((item) => can(item.permission));
 
   return (
-    <aside className="flex h-full w-sidebar flex-col border-l border-border bg-sidebar shadow-[0_18px_45px_rgb(23_34_53_/_0.06)]">
-      <div className="flex h-header items-center border-b border-border px-4">
+    <aside className="flex h-full min-h-0 w-sidebar flex-col overflow-hidden border-l border-border bg-sidebar shadow-[0_18px_45px_rgb(23_34_53_/_0.06)]">
+      <div className="flex h-header shrink-0 items-center border-b border-border px-4">
         <BrandLockup compact />
       </div>
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
         <p className="mb-2 px-3 text-[11px] font-bold text-muted-foreground">التنقل</p>
         <ul className="space-y-1.5">
           {visibleItems.map((item) => (
@@ -39,14 +39,13 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                 onClick={onNavigate}
               >
                 <item.icon aria-hidden="true" className="size-[18px] shrink-0" />
-                <span className="min-w-0 truncate">{item.labelAr}</span>
-                <span className="ms-auto shrink-0 font-numeric text-[10px] text-muted-foreground">{item.labelEn}</span>
+                <span className="min-w-0 truncate">{item.label}</span>
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
-      <div className="space-y-3 border-t border-border p-4">
+      <div className="mt-auto shrink-0 space-y-3 border-t border-border p-4">
         <div className="flex items-center justify-between rounded-[10px] border border-border bg-card px-3.5 py-3 shadow-sm">
           <div>
             <p className="text-meta">معدل الإشغال</p>

@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { parseContractList, parseOwnerList, parseOwnerOut, parsePage, parsePropertyList } from "@/lib/parsers";
+import { parseContractList, parseOwnerList, parseOwnerOut, parseOwnerSummary, parsePage, parsePropertyList } from "@/lib/parsers";
 import type { Id, PagedParams, SelectOption, UnknownRecord } from "@/types/api";
 import type { OwnerCreate, OwnerListParams, OwnerUpdate } from "@/types/resources";
 
@@ -48,5 +48,12 @@ export const ownersApi = {
   },
   balance(ownerId: number) {
     return apiClient.get<UnknownRecord>(`/owners/${ownerId}/balance`).then((response) => response.data);
+  },
+  summary(ownerId: number) {
+    return apiClient.get<unknown>(`/owners/${ownerId}/summary`).then((response) => {
+      const summary = parseOwnerSummary(response.data);
+      if (!summary) throw new Error("تعذر قراءة ملخص المالك.");
+      return summary;
+    });
   },
 };

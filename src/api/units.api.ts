@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { parsePage, parseUnitList, parseUnitOut } from "@/lib/parsers";
+import { parsePage, parseUnitList, parseUnitOperational, parseUnitOut } from "@/lib/parsers";
 import type { Id, PagedParams } from "@/types/api";
 import type { AvailabilityParams } from "@/types/domain";
 import type { UnitCreate, UnitListParams, UnitOut, UnitUpdate } from "@/types/resources";
@@ -37,5 +37,12 @@ export const unitsApi = {
   },
   availability(params: AvailabilityParams) {
     return apiClient.get<UnitOut[]>("/units/availability", { params }).then((response) => parseUnitList(response.data));
+  },
+  operational(id: number) {
+    return apiClient.get<unknown>(`/units/${id}/operational`).then((response) => {
+      const operational = parseUnitOperational(response.data);
+      if (!operational) throw new Error("تعذر قراءة الحالة التشغيلية للوحدة.");
+      return operational;
+    });
   },
 };

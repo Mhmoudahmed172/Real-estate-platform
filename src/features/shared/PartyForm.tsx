@@ -58,7 +58,7 @@ export function PartyForm({ kind, defaultValues, onSubmit, onCancelHref }: Party
 
   return (
     <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-      <FormSection description={`الاسم الرسمي ووسائل التواصل الخاصة بـ${noun}.`} title="البيانات الأساسية">
+      <FormSection description="أدخل الاسم ورقم الهوية." title="البيانات الأساسية">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.full_name?.message} htmlFor="party-full-name" label="الاسم الكامل" required>
             <Input id="party-full-name" {...form.register("full_name")} />
@@ -69,7 +69,7 @@ export function PartyForm({ kind, defaultValues, onSubmit, onCancelHref }: Party
         </div>
       </FormSection>
 
-      <FormSection description="حقول التواصل المتاحة في عقد الواجهة." title="بيانات التواصل">
+      <FormSection description="أدخل رقم الهاتف والبريد الإلكتروني." title="بيانات التواصل">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.phone?.message} htmlFor="party-phone" label="الهاتف">
             <Input id="party-phone" inputMode="tel" {...form.register("phone")} />

@@ -56,7 +56,7 @@ export function DashboardExpiringContracts({ rows }: DashboardExpiringContractsP
                     <p className="text-meta">الانتهاء</p>
                     <p className="text-xs font-medium text-foreground">{formatDate(row.contract.end_date)}</p>
                   </div>
-                  <ContractStatusBadge status={row.contract.status} />
+                  <ContractStatusBadge endDate={row.contract.end_date} status={row.contract.status} />
                   <Button asChild className="hidden rounded-full sm:inline-flex" size="sm" variant="outline">
                     <Link to="/contracts">متابعة</Link>
                   </Button>

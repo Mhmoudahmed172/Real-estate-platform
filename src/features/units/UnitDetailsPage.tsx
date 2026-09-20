@@ -1,20 +1,22 @@
 import { motion } from "framer-motion";
-import { ArrowRight, DoorOpen, Pencil, Trash2 } from "lucide-react";
+import { DoorOpen } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { normalizeApiError } from "@/api/errors";
-import { Can } from "@/app/guards/Can";
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
+import { DetailHeader } from "@/components/layout/DetailHeader";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { UnitStatusBadge } from "@/components/ui/StatusBadge";
-import { useUnit, useUnitMutations, useUnitProperty } from "@/features/units/useUnits";
-import { formatCurrency, formatNumber } from "@/lib/format";
-import { unitStatusLabels } from "@/lib/labels";
+import { useAuthorization } from "@/features/auth/useAuthorization";
+import { useUnit, useUnitMutations, useUnitOperational, useUnitProperty } from "@/features/units/useUnits";
+import { relationLabel } from "@/lib/display";
+import { formatCurrency, formatDate, formatNumber } from "@/lib/format";
+import { formatMaintenanceStatusValue } from "@/lib/operationalLabels";
 import { pageMotion } from "@/lib/motion";
 
 function MetaItem({ label, value }: { label: string; value: string }) {
@@ -29,15 +31,17 @@ function MetaItem({ label, value }: { label: string; value: string }) {
 export function UnitDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { can } = useAuthorization();
   const unitId = Number(id);
   const validId = Number.isFinite(unitId) ? unitId : undefined;
   const unitQuery = useUnit(validId);
+  const operationalQuery = useUnitOperational(validId);
   const propertyQuery = useUnitProperty(unitQuery.data?.property_id);
   const { deleteMutation } = useUnitMutations();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
   const unit = unitQuery.data;
+  const operational = operationalQuery.data;
 
   if (unitQuery.isPending) {
     return (
@@ -52,11 +56,7 @@ export function UnitDetailsPage() {
   if (unitQuery.isError || !unit) {
     return (
       <PageContainer>
-        <ErrorState
-          description="تعذر تحميل تفاصيل الوحدة."
-          title="تعذر تحميل الوحدة"
-          onRetry={() => void unitQuery.refetch()}
-        />
+        <ErrorState description="تعذر تحميل تفاصيل الوحدة." title="تعذر تحميل الوحدة" onRetry={() => void unitQuery.refetch()} />
       </PageContainer>
     );
   }
@@ -74,68 +74,79 @@ export function UnitDetailsPage() {
   return (
     <motion.div {...pageMotion}>
       <PageContainer>
-        <div>
-          <Button asChild className="mb-3 h-8 px-2 text-muted-foreground" size="sm" variant="ghost">
-            <Link to="/units">
-              <ArrowRight aria-hidden="true" className="size-4" />
-              العودة إلى الوحدات
-            </Link>
-          </Button>
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex min-w-0 items-start gap-4">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
-                <DoorOpen aria-hidden="true" className="size-6" />
-              </span>
-              <div className="min-w-0 space-y-2">
-                <p className="text-xs font-semibold text-primary">ملف الوحدة</p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-page text-foreground">{unit.unit_number}</h1>
-                  <UnitStatusBadge status={unit.status} />
-                  {unit.unit_type ? <Badge variant="muted">{unit.unit_type}</Badge> : null}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {propertyQuery.data?.name ?? `عقار #${unit.property_id}`}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Can permission="units.update">
+        <DetailHeader
+          backLabel="العودة إلى الوحدات"
+          backTo="/units"
+          badges={
+            <>
+              <UnitStatusBadge status={unit.status} />
+              {unit.unit_type ? <Badge variant="muted">{unit.unit_type}</Badge> : null}
+            </>
+          }
+          description={relationLabel(propertyQuery.data?.name, "property")}
+          eyebrow="ملف الوحدة"
+          icon={
+            <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary">
+              <DoorOpen aria-hidden="true" className="size-5" />
+            </span>
+          }
+          menuItems={can("units.delete") ? [{ id: "delete", label: "حذف", destructive: true, onSelect: () => setConfirmOpen(true) }] : []}
+          primaryAction={
+            <>
+              {unit.status === "Available" && can("contracts.create") ? (
+                <Button asChild className="rounded-full">
+                  <Link to={`/contracts/new?property_id=${unit.property_id}&unit_id=${unit.id}`}>إنشاء عقد</Link>
+                </Button>
+              ) : null}
+              {can("units.update") ? (
                 <Button asChild className="rounded-full" variant="outline">
-                  <Link to={`/units/${unit.id}/edit`}>
-                    <Pencil aria-hidden="true" className="size-4" />
-                    تعديل
-                  </Link>
+                  <Link to={`/units/${unit.id}/edit`}>تعديل</Link>
                 </Button>
-              </Can>
-              <Can permission="units.delete">
-                <Button className="rounded-full" variant="destructive" onClick={() => setConfirmOpen(true)}>
-                  <Trash2 aria-hidden="true" className="size-4" />
-                  حذف
-                </Button>
-              </Can>
-            </div>
-          </div>
-        </div>
+              ) : null}
+            </>
+          }
+          title={unit.unit_number}
+        />
 
         <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <Card>
-            <CardContent className="pt-5">
+            <CardContent className="pt-4">
               <MetaItem label="قيمة الإيجار" value={formatCurrency(unit.rent_value)} />
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-5">
+            <CardContent className="pt-4">
+              <MetaItem label="المستأجر الحالي" value={operational?.current_tenant?.full_name ?? "لا يوجد مستأجر حالي"} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <MetaItem label="العقد الحالي" value={operational?.active_contract ? `${formatDate(operational.active_contract.start_date)} — ${formatDate(operational.active_contract.end_date)}` : "لا يوجد عقد ساري"} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <MetaItem label="نهاية العقد" value={operational?.contract_end_date ? formatDate(operational.contract_end_date) : "—"} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <MetaItem label="تاريخ بداية الشغور" value={operational?.vacant_since ? formatDate(operational.vacant_since) : "—"} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <MetaItem label="مدة الشغور" value={unit.status !== "Available" ? "—" : operational?.vacancy_duration_days == null ? "مدة الشغور غير متوفرة" : `${formatNumber(operational.vacancy_duration_days)} يومًا`} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <MetaItem label="حالة الصيانة" value={formatMaintenanceStatusValue(operational?.maintenance_status)} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
               <MetaItem label="الدور" value={unit.floor == null ? "—" : formatNumber(unit.floor)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="الغرف" value={unit.rooms_count == null ? "—" : formatNumber(unit.rooms_count)} />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-5">
-              <MetaItem label="المعرف" value={`#${unit.id}`} />
             </CardContent>
           </Card>
         </section>
@@ -143,11 +154,9 @@ export function UnitDetailsPage() {
         <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle>البيانات الأساسية</CardTitle>
+              <CardTitle>المواصفات</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <MetaItem label="رقم الوحدة" value={unit.unit_number} />
-              <MetaItem label="الحالة" value={unitStatusLabels[unit.status]} />
               <MetaItem label="نوع الوحدة" value={unit.unit_type ?? "—"} />
               <MetaItem label="المساحة" value={unit.area == null ? "—" : formatNumber(unit.area, 1)} />
             </CardContent>
@@ -174,14 +183,17 @@ export function UnitDetailsPage() {
           </Card>
         </section>
 
-        {deleteError ? <p className="text-xs text-destructive">{deleteError}</p> : null}
         <ConfirmDialog
-          description="سيتم حذف الوحدة إذا سمحت صلاحيات الخادم بذلك. لا يمكن التراجع عن هذا الإجراء من الواجهة."
+          confirmLabel="حذف الوحدة"
+          description={deleteError ?? `هل أنت متأكد من حذف الوحدة «${unit.unit_number}»؟ لا يمكن التراجع عن هذا الإجراء.`}
           isLoading={deleteMutation.isPending}
           open={confirmOpen}
-          title={`حذف الوحدة ${unit.unit_number}؟`}
+          title="حذف الوحدة"
           onConfirm={() => void handleDelete()}
-          onOpenChange={setConfirmOpen}
+          onOpenChange={(open) => {
+            setConfirmOpen(open);
+            if (!open) setDeleteError(null);
+          }}
         />
       </PageContainer>
     </motion.div>

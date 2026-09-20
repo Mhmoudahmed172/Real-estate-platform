@@ -3,6 +3,7 @@ import { Building2, DoorOpen, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Can } from "@/app/guards/Can";
+import { ActiveFilterBanner } from "@/components/feedback/ActiveFilterBanner";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -16,6 +17,7 @@ import { UnitStatusBadge } from "@/components/ui/StatusBadge";
 import { useAuthorization } from "@/features/auth/useAuthorization";
 import { usePropertiesOptions, useUnitsPage } from "@/features/units/useUnits";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { missingLabel } from "@/lib/display";
 import { unitStatusLabels } from "@/lib/labels";
 import { pageMotion } from "@/lib/motion";
 import { readPageParams, writePageParams } from "@/lib/pagination";
@@ -27,7 +29,8 @@ export function UnitsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [unitType, setUnitType] = useState(searchParams.get("unit_type") ?? "");
   const query = searchParams.get("q") ?? "";
-  const status = (searchParams.get("status") as UnitStatus | null) ?? null;
+  const status = ((searchParams.get("status_filter") ?? searchParams.get("status")) as UnitStatus | null) ?? null;
+  const vacantDaysMin = searchParams.get("vacant_days_min") ? Number(searchParams.get("vacant_days_min")) : null;
   const propertyId = searchParams.get("property_id") ? Number(searchParams.get("property_id")) : null;
   const pagination = readPageParams(searchParams);
   const propertiesQuery = usePropertiesOptions();
@@ -38,10 +41,11 @@ export function UnitsPage() {
       status_filter: status,
       unit_type: unitType || undefined,
       property_id: propertyId,
+      vacant_days_min: vacantDaysMin && Number.isFinite(vacantDaysMin) ? vacantDaysMin : null,
       page: pagination.page,
       page_size: pagination.page_size,
     }),
-    [pagination.page, pagination.page_size, propertyId, query, status, unitType],
+    [pagination.page, pagination.page_size, propertyId, query, status, unitType, vacantDaysMin],
   );
 
   const listQuery = useUnitsPage(params);
@@ -82,7 +86,7 @@ export function UnitsPage() {
           </span>
           <div className="min-w-0">
             <p className="font-semibold text-foreground">{row.unit_number}</p>
-            <p className="text-meta">{propertyNames.get(row.property_id) ?? `عقار #${row.property_id}`}</p>
+            <p className="text-meta">{propertyNames.get(row.property_id) ?? missingLabel("property")}</p>
           </div>
         </div>
       ),
@@ -109,7 +113,7 @@ export function UnitsPage() {
               </Button>
             </Can>
           }
-          description="إدارة الوحدات حسب العقار والحالة والحقول التي يدعمها عقد OpenAPI."
+          description="إدارة الوحدات حسب العقار والحالة ونوع الوحدة."
           eyebrow="إدارة المحفظة"
           title="الوحدات"
         />
@@ -185,6 +189,7 @@ export function UnitsPage() {
             مسح التصفية
           </Button>
         </section>
+        {vacantDaysMin ? <ActiveFilterBanner description="الوحدات المتاحة التي مرّ على شغورها المدة المحددة." label={`شاغرة منذ ${vacantDaysMin} يومًا فأكثر`} /> : null}
         {listQuery.isError ? (
           <ErrorState
             description="تعذر تحميل قائمة الوحدات."
@@ -256,7 +261,7 @@ export function UnitsPage() {
                       <div className="min-w-0">
                         <p className="font-semibold text-foreground">{unit.unit_number}</p>
                         <p className="mt-1 text-meta">
-                          {propertyNames.get(unit.property_id) ?? `عقار #${unit.property_id}`} · {unit.unit_type ?? "بدون نوع"}
+                          {propertyNames.get(unit.property_id) ?? missingLabel("property")} · {unit.unit_type ?? "بدون نوع"}
                         </p>
                       </div>
                     </div>

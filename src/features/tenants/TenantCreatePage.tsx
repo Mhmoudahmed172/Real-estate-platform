@@ -21,7 +21,7 @@ export function TenantCreatePage() {
       <PageContainer>
         <div className="mx-auto w-full max-w-[800px] space-y-6">
           <PageHeader
-            description="أدخل بيانات المستأجر ووسائل التواصل المتاحة في عقد الواجهة."
+            description="أدخل اسم المستأجر ووسائل التواصل ورقم الهوية."
             eyebrow="سجل حساب جديد"
             title="إضافة مستأجر"
           />

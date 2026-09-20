@@ -2,6 +2,7 @@ import { apiClient } from "@/api/client";
 import { createResourceApi } from "@/api/resource.api";
 import { parseMaintenanceList, parseMaintenanceOut, parsePage } from "@/lib/parsers";
 import type { Id, PagedParams, UnknownRecord } from "@/types/api";
+import type { TimelineEntry } from "@/types/operations";
 import type { Assignment, MaintenanceCreate, MaintenanceListParams, MaintenanceTransition, MaintenanceUpdate } from "@/types/resources";
 
 const resource = createResourceApi<unknown, MaintenanceCreate, MaintenanceUpdate>("/maintenance/");
@@ -39,5 +40,8 @@ export const maintenanceApi = {
   },
   history(requestId: number) {
     return apiClient.get<UnknownRecord[]>(`/maintenance/${requestId}/history`).then((response) => response.data);
+  },
+  timeline(requestId: number) {
+    return apiClient.get<TimelineEntry[]>(`/maintenance/${requestId}/timeline`).then((response) => response.data);
   },
 };

@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { Eye } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
+import { propertiesApi } from "@/api/properties.api";
 import { FormField } from "@/components/forms/FormField";
 import { FormSection } from "@/components/forms/FormSection";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +16,7 @@ import { useUnitsForProperty } from "@/features/contracts/useContracts";
 import { applyApiFieldErrors } from "@/lib/formErrors";
 import { formatCurrency, parseMoney } from "@/lib/format";
 import { contractStatusLabels, paymentFrequencyLabels } from "@/lib/labels";
+import { queryKeys } from "@/lib/queryKeys";
 import type { SelectOption } from "@/types/api";
 import { contractStatuses, paymentFrequencies, type ContractCreate, type ContractOut, type ContractUpdate } from "@/types/resources";
 
@@ -29,14 +32,16 @@ type ContractFormProps = {
   onPreview?: SchedulePreviewHandler;
   previewLoading?: boolean;
   onCancelHref: string;
+  initialPropertyId?: number;
+  initialUnitId?: number;
 };
 
 type Values = ContractFormValues | ContractUpdateValues;
 
-function toCreateValues(contract?: ContractOut): ContractFormValues {
+function toCreateValues(contract?: ContractOut, initial?: { propertyId?: number; unitId?: number }): ContractFormValues {
   return {
-    property_id: contract?.property_id ?? 0,
-    unit_id: contract?.unit_id ?? 0,
+    property_id: contract?.property_id ?? initial?.propertyId ?? 0,
+    unit_id: contract?.unit_id ?? initial?.unitId ?? 0,
     owner_id: contract?.owner_id ?? 0,
     tenant_id: contract?.tenant_id ?? 0,
     start_date: contract?.start_date ?? "",
@@ -57,14 +62,26 @@ function toUpdateValues(contract?: ContractOut): ContractUpdateValues {
   };
 }
 
-export function ContractForm({ mode, contract, properties, owners, tenants, onSubmit, onPreview, previewLoading, onCancelHref }: ContractFormProps) {
+export function ContractForm({ mode, contract, properties, owners, tenants, onSubmit, onPreview, previewLoading, onCancelHref, initialPropertyId, initialUnitId }: ContractFormProps) {
   const form = useForm<Values>({
     resolver: zodResolver(mode === "create" ? contractFormSchema : contractUpdateSchema),
-    defaultValues: mode === "create" ? toCreateValues(contract) : toUpdateValues(contract),
+    defaultValues: mode === "create" ? toCreateValues(contract, { propertyId: initialPropertyId, unitId: initialUnitId }) : toUpdateValues(contract),
   });
   const selectedPropertyId = mode === "create" ? Number(form.watch("property_id")) || null : contract?.property_id;
-  const unitsQuery = useUnitsForProperty(selectedPropertyId);
+  const unitsQuery = useUnitsForProperty(selectedPropertyId, mode === "create" ? { availableForContract: true } : undefined);
+  const propertyQuery = useQuery({
+    queryKey: queryKeys.properties.detail(selectedPropertyId ?? "unknown"),
+    queryFn: () => propertiesApi.get(selectedPropertyId as number),
+    enabled: mode === "create" && typeof selectedPropertyId === "number",
+  });
   const unitOptions = useMemo(() => unitsQuery.data ?? [], [unitsQuery.data]);
+  const propertyOwnerId = propertyQuery.data?.owner_id ?? null;
+  const propertyOwnerName = owners.find((owner) => owner.id === propertyOwnerId)?.label;
+
+  useEffect(() => {
+    if (mode !== "create" || !propertyOwnerId) return;
+    form.setValue("owner_id", propertyOwnerId, { shouldValidate: true });
+  }, [form, mode, propertyOwnerId]);
   const formErrors = form.formState.errors as Record<string, { message?: string } | undefined>;
   const errorFor = (name: string) => formErrors[name]?.message;
   const watchString = (name: string) => String(form.watch(name as never) ?? "");
@@ -74,7 +91,7 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
     return {
       property_id: createValues.property_id,
       unit_id: createValues.unit_id,
-      owner_id: createValues.owner_id,
+      owner_id: createValues.owner_id || propertyOwnerId || undefined,
       tenant_id: createValues.tenant_id,
       start_date: createValues.start_date,
       end_date: createValues.end_date,
@@ -113,7 +130,7 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
   return (
     <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
       {mode === "create" ? (
-        <FormSection description="العقار والوحدة والمالك والمستأجر كما يتطلب عقد إنشاء العقد." title="الأطراف والوحدة">
+        <FormSection description="اختر العقار والوحدة والمالك والمستأجر." title="الأطراف والوحدة">
           <div className="grid gap-4 md:grid-cols-2">
             <FormField error={errorFor("property_id")} label="العقار" required>
               <Select value={form.watch("property_id") ? String(form.watch("property_id")) : ""} onValueChange={(value) => { form.setValue("property_id", Number(value), { shouldValidate: true }); form.setValue("unit_id", 0, { shouldValidate: true }); }}>
@@ -123,16 +140,22 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
             </FormField>
             <FormField error={errorFor("unit_id")} label="الوحدة" required>
               <Select disabled={!selectedPropertyId || unitsQuery.isPending} value={form.watch("unit_id") ? String(form.watch("unit_id")) : ""} onValueChange={(value) => form.setValue("unit_id", Number(value), { shouldValidate: true })}>
-                <SelectTrigger><SelectValue placeholder={selectedPropertyId ? "اختر الوحدة" : "اختر العقار أولًا"} /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={selectedPropertyId ? (unitOptions.length ? "اختر الوحدة" : "لا توجد وحدات متاحة للتعاقد") : "اختر العقار أولًا"} /></SelectTrigger>
                 <SelectContent>{unitOptions.map((unit) => <SelectItem key={unit.id} value={String(unit.id)}>{unit.unit_number} · {formatCurrency(unit.rent_value)}</SelectItem>)}</SelectContent>
               </Select>
             </FormField>
-            <FormField error={errorFor("owner_id")} label="المالك" required>
-              <Select value={form.watch("owner_id") ? String(form.watch("owner_id")) : ""} onValueChange={(value) => form.setValue("owner_id", Number(value), { shouldValidate: true })}>
-                <SelectTrigger><SelectValue placeholder="اختر المالك" /></SelectTrigger>
-                <SelectContent>{owners.map((owner) => <SelectItem key={owner.id} value={String(owner.id)}>{owner.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </FormField>
+            {propertyOwnerId ? (
+              <FormField label="المالك">
+                <Input disabled value={propertyOwnerName ?? "مالك العقار المرتبط"} />
+              </FormField>
+            ) : (
+              <FormField error={errorFor("owner_id")} label="المالك" required>
+                <Select value={form.watch("owner_id") ? String(form.watch("owner_id")) : ""} onValueChange={(value) => form.setValue("owner_id", Number(value), { shouldValidate: true })}>
+                  <SelectTrigger><SelectValue placeholder="اختر المالك" /></SelectTrigger>
+                  <SelectContent>{owners.map((owner) => <SelectItem key={owner.id} value={String(owner.id)}>{owner.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </FormField>
+            )}
             <FormField error={errorFor("tenant_id")} label="المستأجر" required>
               <Select value={form.watch("tenant_id") ? String(form.watch("tenant_id")) : ""} onValueChange={(value) => form.setValue("tenant_id", Number(value), { shouldValidate: true })}>
                 <SelectTrigger><SelectValue placeholder="اختر المستأجر" /></SelectTrigger>
@@ -143,7 +166,7 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
         </FormSection>
       ) : null}
 
-      <FormSection description="القيم المالية والتواريخ المدعومة في عقد OpenAPI." title="تفاصيل العقد">
+      <FormSection description="حدد مدة العقد وقيمة الإيجار ودورية الدفع." title="تفاصيل العقد">
         <div className="grid gap-4 md:grid-cols-2">
           {mode === "create" ? <FormField error={errorFor("start_date")} htmlFor="contract-start" label="تاريخ البداية" required><Input id="contract-start" type="date" {...form.register("start_date" as never)} /></FormField> : null}
           <FormField error={errorFor("end_date")} htmlFor="contract-end" label="تاريخ النهاية" required><Input id="contract-end" type="date" {...form.register("end_date" as never)} /></FormField>
@@ -154,7 +177,7 @@ export function ContractForm({ mode, contract, properties, owners, tenants, onSu
         </div>
       </FormSection>
 
-      <FormSection description="نص الشروط اختياري إذا أرسله backend ضمن العقد." title="الشروط">
+      <FormSection description="يمكنك إضافة شروط العقد إن وجدت." title="الشروط">
         <FormField error={errorFor("terms")} htmlFor="contract-terms" label="الشروط">
           <Textarea id="contract-terms" rows={4} {...form.register("terms" as never)} />
         </FormField>

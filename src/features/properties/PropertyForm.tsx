@@ -60,7 +60,7 @@ export function PropertyForm({ mode, defaultProperty, owners, onSubmit, onCancel
 
   return (
     <form className="space-y-5" onSubmit={(event) => void form.handleSubmit(handleSubmit)(event)}>
-      <FormSection description="اسم العقار ونوعه التشغيلي كما يعرّفهما عقد الإنشاء." title="البيانات الأساسية">
+      <FormSection description="أدخل اسم العقار ونوعه." title="البيانات الأساسية">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.name?.message} htmlFor="property-name" label="اسم العقار" required>
             <Input id="property-name" {...form.register("name")} />
@@ -96,7 +96,7 @@ export function PropertyForm({ mode, defaultProperty, owners, onSubmit, onCancel
         </div>
       </FormSection>
 
-      <FormSection description="ربط المالك اختياري من قائمة الملاك المحمّلة." title="الملكية">
+      <FormSection description="يمكن ربط العقار بمالك من قائمة الملاك." title="الملكية">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.owner_id?.message} label="المالك">
             <Select
@@ -121,7 +121,7 @@ export function PropertyForm({ mode, defaultProperty, owners, onSubmit, onCancel
         </div>
       </FormSection>
 
-      <FormSection description="الإعدادات التشغيلية المتاحة في عقد العقار." title="إعدادات العقار">
+      <FormSection description="حدد عدد الأدوار وحالة العقار." title="إعدادات العقار">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField error={form.formState.errors.floors_count?.message} htmlFor="property-floors" label="عدد الأدوار">
             <Input id="property-floors" inputMode="numeric" type="number" {...form.register("floors_count")} />

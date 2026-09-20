@@ -23,7 +23,7 @@ export function ContractEditPage() {
   }
 
   return <motion.div {...pageMotion}><PageContainer>
-    <PageHeader eyebrow="العقود" title="تعديل العقد" description="تعديل الحقول التي يدعمها ContractUpdate فقط." />
+    <PageHeader eyebrow="العقود" title="تعديل العقد" description="تحديث بيانات العقد والتواريخ والقيم المالية." />
     {contractQuery.isPending ? <LoadingState label="جاري تحميل العقد" /> : contractQuery.isError || !contractQuery.data ? <ErrorState title="تعذر تحميل العقد" description="لا يمكن فتح نموذج التعديل لهذا العقد." onRetry={() => void contractQuery.refetch()} /> : <ContractForm mode="edit" contract={contractQuery.data} properties={[]} owners={[]} tenants={[]} onSubmit={submit} onCancelHref={`/contracts/${contractQuery.data.id}`} />}
   </PageContainer></motion.div>;
 }

@@ -75,6 +75,7 @@ export type UnitOut = {
   rent_value: number;
   property_id: number;
   status: UnitStatus;
+  vacant_since?: string | null;
 };
 
 export type UnitCreate = {
@@ -102,6 +103,8 @@ export type UnitListParams = PaginationParams & {
   status_filter?: UnitStatus | null;
   unit_type?: string | null;
   property_id?: number | null;
+  vacant_days_min?: number | null;
+  available_for_contract?: boolean | null;
 };
 
 export type OwnerOut = {
@@ -176,13 +179,19 @@ export type ContractOut = {
   terms?: string | null;
   status: ContractStatus;
   renewed_from_id?: number | null;
+  days_remaining?: number | null;
+  collection_status?: string | null;
+  total_due?: string | null;
+  total_paid?: string | null;
+  outstanding_amount?: string | null;
+  overdue_count?: number | null;
 };
 
 
 export type ContractCreate = {
   property_id: number;
   unit_id: number;
-  owner_id: number;
+  owner_id?: number | null;
   tenant_id: number;
   start_date: string;
   end_date: string;
@@ -210,6 +219,7 @@ export type ContractListParams = PaginationParams & {
   tenant_id?: number | null;
   owner_id?: number | null;
   status_filter?: ContractStatus | null;
+  expiring_within_days?: number | null;
 };
 
 export type PaymentRecord = {
@@ -236,11 +246,16 @@ export type MaintenanceOut = {
   description?: string | null;
   vendor_id?: number | null;
   execution_date?: string | null;
+  created_at?: string | null;
 };
 
 export type MaintenanceListParams = PaginationParams & {
   property_id?: number | null;
   status_filter?: MaintenanceStatus | null;
+  priority_filter?: MaintenancePriority | null;
+  open?: boolean | null;
+  overdue?: boolean | null;
+  vendor_id?: number | null;
 };
 
 
@@ -347,6 +362,7 @@ export type PaymentListParams = PaginationParams & {
   status_filter?: PaymentStatus | null;
   due_from?: string | null;
   due_to?: string | null;
+  overdue?: boolean | null;
 };
 
 

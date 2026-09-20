@@ -70,7 +70,7 @@ export function DataTable<T>({
                 </th>
               ))}
               {actions ? (
-                <th className="w-0 px-4 py-3 text-start text-[11px] font-semibold uppercase tracking-[0.08em]" scope="col">
+                <th className="w-0 px-4 py-3 text-start text-[11px] font-bold" scope="col">
                   إجراءات
                 </th>
               ) : null}

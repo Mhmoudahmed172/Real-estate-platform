@@ -64,4 +64,7 @@ export const contractsApi = {
       return contract;
     });
   },
+  financialSummary(contractId: number) {
+    return apiClient.get<unknown>(`/contracts/${contractId}/financial-summary`).then((response) => response.data);
+  },
 };

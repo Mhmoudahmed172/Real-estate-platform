@@ -24,6 +24,10 @@ export function useVendorMaintenance(id: Id | undefined) {
   return useQuery({ queryKey: [...vendorsKeys.detail(id ?? "unknown"), "maintenance"] as const, queryFn: () => vendorsApi.maintenance(Number(id)), enabled: id !== undefined });
 }
 
+export function useVendorStats(id: Id | undefined) {
+  return useQuery({ queryKey: [...vendorsKeys.detail(id ?? "unknown"), "stats"] as const, queryFn: () => vendorsApi.stats(Number(id)), enabled: id !== undefined });
+}
+
 export function useVendorMutations() {
   const queryClient = useQueryClient();
   const invalidate = async () => {

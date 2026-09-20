@@ -28,6 +28,14 @@ export function useUnit(id: Id | undefined) {
   });
 }
 
+export function useUnitOperational(id: Id | undefined) {
+  return useQuery({
+    queryKey: [...unitsKeys.detail(id ?? "unknown"), "operational"] as const,
+    queryFn: () => unitsApi.operational(Number(id)),
+    enabled: id !== undefined,
+  });
+}
+
 export function useUnitProperty(propertyId: number | undefined) {
   return useQuery({
     queryKey: queryKeys.properties.detail(propertyId ?? "unknown"),

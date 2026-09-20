@@ -76,10 +76,10 @@ export function useContractOptions() {
   return { propertiesQuery, ownersQuery, tenantsQuery };
 }
 
-export function useUnitsForProperty(propertyId: number | null | undefined) {
+export function useUnitsForProperty(propertyId: number | null | undefined, options?: { availableForContract?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.properties.units(propertyId ?? "unknown"),
-    queryFn: () => propertiesApi.units(propertyId as number),
+    queryKey: [...queryKeys.properties.units(propertyId ?? "unknown"), options?.availableForContract ?? false],
+    queryFn: () => propertiesApi.units(propertyId as number, { available_for_contract: options?.availableForContract }),
     enabled: typeof propertyId === "number",
   });
 }
